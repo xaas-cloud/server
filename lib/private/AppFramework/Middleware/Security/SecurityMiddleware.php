@@ -41,6 +41,7 @@ use OCP\INavigationManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
 use OCP\IUserSession;
+use OCP\Security\CSRF\ICsrfValidator;
 use OCP\Security\Ip\IRemoteAddress;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
@@ -68,6 +69,7 @@ class SecurityMiddleware extends Middleware {
 		private AuthorizedGroupMapper $groupAuthorizationMapper,
 		private IUserSession $userSession,
 		private IRemoteAddress $remoteAddress,
+		private readonly ICsrfValidator $csrfValidator,
 	) {
 	}
 
@@ -207,7 +209,7 @@ class SecurityMiddleware extends Middleware {
 			return false;
 		}
 
-		return !$this->request->passesCSRFCheck();
+		return !$this->csrfValidator->validate($this->request);
 	}
 
 	private function isValidOCSRequest(): bool {

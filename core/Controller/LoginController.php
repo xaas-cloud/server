@@ -41,6 +41,7 @@ use OCP\IUser;
 use OCP\IUserManager;
 use OCP\Notification\IManager;
 use OCP\Security\Bruteforce\IThrottler;
+use OCP\Security\CSRF\ICsrfValidator;
 use OCP\Util;
 
 class LoginController extends Controller {
@@ -63,6 +64,7 @@ class LoginController extends Controller {
 		private IManager $manager,
 		private IL10N $l10n,
 		private IAppManager $appManager,
+		private ICsrfValidator $csrfValidator,
 	) {
 		parent::__construct($appName, $request);
 	}
@@ -284,7 +286,7 @@ class LoginController extends Controller {
 		?string $redirect_url = null,
 		string $timezone = '',
 		string $timezone_offset = ''): RedirectResponse {
-		if (!$this->request->passesCSRFCheck()) {
+		if (!$this->csrfValidator->validate($this->request)) {
 			if ($this->userSession->isLoggedIn()) {
 				// If the user is already logged in and the CSRF check does not pass then
 				// simply redirect the user to the correct page as required. This is the

@@ -18,6 +18,9 @@ use OC\AppFramework\Middleware\Security\Exceptions\SecurityException;
 use OC\Appframework\Middleware\Security\Exceptions\StrictCookieMissingException;
 use OC\AppFramework\Middleware\Security\SecurityMiddleware;
 use OC\AppFramework\Utility\ControllerMethodReflector;
+use OC\Security\CSRF\CsrfToken;
+use OC\Security\CSRF\CsrfTokenManager;
+use OC\Security\CSRF\CsrfValidator;
 use OC\Settings\AuthorizedGroupMapper;
 use OC\User\Session;
 use OCP\App\IAppManager;
@@ -65,6 +68,8 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 	private $userSession;
 	/** @var AuthorizedGroupMapper|\PHPUnit\Framework\MockObject\MockObject */
 	private $authorizedGroupMapper;
+	private CsrfTokenManager $csrfTokenManager;
+	private CsrfValidator $csrfValidator;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -81,6 +86,8 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 		$this->navigationManager = $this->createMock(INavigationManager::class);
 		$this->urlGenerator = $this->createMock(IURLGenerator::class);
 		$this->l10n = $this->createMock(IL10N::class);
+		$this->csrfTokenManager = $this->createMock(CsrfTokenManager::class);
+		$this->csrfValidator = new CsrfValidator($this->csrfTokenManager);
 		$this->middleware = $this->getMiddleware(true, true, false);
 		$this->secException = new SecurityException('hey', false);
 		$this->secAjaxException = new SecurityException('hey', true);
@@ -108,7 +115,8 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 			$this->l10n,
 			$this->authorizedGroupMapper,
 			$this->userSession,
-			$remoteIpAddress
+			$remoteIpAddress,
+			$this->csrfValidator,
 		);
 	}
 
@@ -321,12 +329,18 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 	public function testCsrfCheck(string $method): void {
 		$this->expectException(\OC\AppFramework\Middleware\Security\Exceptions\CrossSiteRequestForgeryException::class);
 
-		$this->request->expects($this->once())
-			->method('passesCSRFCheck')
-			->willReturn(false);
-		$this->request->expects($this->once())
+		$this->request->expects($this->exactly(2))
 			->method('passesStrictCookieCheck')
 			->willReturn(true);
+		$this->request->expects($this->once())
+			->method('getParam')
+			->with('requesttoken', '')
+			->willReturn('');
+		$this->request->expects($this->once())
+			->method('getHeader')
+			->with('REQUESTTOKEN')
+			->willReturn('');
+
 		$this->reader->reflect($this->controller, $method);
 		$this->middleware->beforeController($this->controller, $method);
 	}
@@ -347,11 +361,20 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 	 * @dataProvider dataPublicPage
 	 */
 	public function testPassesCsrfCheck(string $method): void {
-		$this->request->expects($this->once())
-			->method('passesCSRFCheck')
+		$this->request->expects($this->exactly(2))
+			->method('passesStrictCookieCheck')
 			->willReturn(true);
 		$this->request->expects($this->once())
-			->method('passesStrictCookieCheck')
+			->method('getParam')
+			->with('requesttoken', '')
+			->willReturn('');
+		$this->request->expects($this->once())
+			->method('getHeader')
+			->with('REQUESTTOKEN')
+			->willReturn('foobar');
+		$this->csrfTokenManager->expects($this->once())
+			->method('isTokenValid')
+			->with(new CsrfToken('foobar'))
 			->willReturn(true);
 
 		$this->reader->reflect($this->controller, $method);
@@ -364,12 +387,21 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 	public function testFailCsrfCheck(string $method): void {
 		$this->expectException(\OC\AppFramework\Middleware\Security\Exceptions\CrossSiteRequestForgeryException::class);
 
-		$this->request->expects($this->once())
-			->method('passesCSRFCheck')
-			->willReturn(false);
-		$this->request->expects($this->once())
+		$this->request->expects($this->exactly(2))
 			->method('passesStrictCookieCheck')
 			->willReturn(true);
+		$this->request->expects($this->once())
+			->method('getParam')
+			->with('requesttoken', '')
+			->willReturn('');
+		$this->request->expects($this->once())
+			->method('getHeader')
+			->with('REQUESTTOKEN')
+			->willReturn('foobar');
+		$this->csrfTokenManager->expects($this->once())
+			->method('isTokenValid')
+			->with(new CsrfToken('foobar'))
+			->willReturn(false);
 
 		$this->reader->reflect($this->controller, $method);
 		$this->middleware->beforeController($this->controller, $method);
@@ -386,6 +418,12 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 		$this->request->expects($this->once())
 			->method('passesStrictCookieCheck')
 			->willReturn(false);
+		$this->request->expects($this->never())
+			->method('getParam');
+		$this->request->expects($this->never())
+			->method('getHeader');
+		$this->csrfTokenManager->expects($this->never())
+			->method('isTokenValid');
 
 		$this->reader->reflect($this->controller, $method);
 		$this->middleware->beforeController($this->controller, $method);
@@ -441,6 +479,9 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 		$this->request
 			->method('getHeader')
 			->willReturnCallback(function ($header) use ($hasOcsApiHeader, $hasBearerAuth) {
+				if ($header === 'REQUESTTOKEN') {
+					return '';
+				}
 				if ($header === 'OCS-APIREQUEST' && $hasOcsApiHeader) {
 					return 'true';
 				}
@@ -449,9 +490,15 @@ class SecurityMiddlewareTest extends \Test\TestCase {
 				}
 				return '';
 			});
-		$this->request->expects($this->once())
+		$this->request->expects($this->exactly(2))
 			->method('passesStrictCookieCheck')
 			->willReturn(true);
+		$this->request->expects($this->once())
+			->method('getParam')
+			->with('requesttoken', '')
+			->willReturn('');
+		$this->csrfTokenManager->expects($this->never())
+			->method('isTokenValid');
 
 		$controller = new $controllerClass('test', $this->request);
 
