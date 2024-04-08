@@ -276,6 +276,15 @@ class Local extends \OC\Files\Storage\Common {
 		if ($this->caseInsensitive) {
 			$fullPath = $this->getSourcePath($path);
 			$content = scandir(dirname($fullPath), SCANDIR_SORT_NONE);
+			$parentPath = dirname($fullPath);
+			if (!is_dir($parentPath)) {
+				/** @var LoggerInterface $logger */
+				$logger = \OC::$server->get(LoggerInterface::class);
+				$logger->warning("called file_exists with non existing parent: " . $path, [
+					'exception' => new \Exception("called file_exists with non existing parent: " . $path)
+				]);
+				return false;
+			}
 			return is_array($content) && array_search(basename($fullPath), $content) !== false;
 		} else {
 			return file_exists($this->getSourcePath($path));
