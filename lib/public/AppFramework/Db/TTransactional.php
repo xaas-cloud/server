@@ -82,6 +82,7 @@ trait TTransactional {
 	 * @psalm-param callable():T $fn
 	 * @param IDBConnection $db
 	 * @param int $maxRetries
+	 * @param int<0, \max> $sleep - sleep time in microseconds between retries
 	 *
 	 * @return mixed the result of the passed callable
 	 * @psalm-return T
@@ -91,7 +92,7 @@ trait TTransactional {
 	 *
 	 * @since 27.0.0
 	 */
-	protected function atomicRetry(callable $fn, IDBConnection $db, int $maxRetries = 3): mixed {
+	protected function atomicRetry(callable $fn, IDBConnection $db, int $maxRetries = 3, int $sleep = 0): mixed {
 		for ($i = 0; $i < $maxRetries; $i++) {
 			try {
 				return $this->atomic($fn, $db);
@@ -99,6 +100,9 @@ trait TTransactional {
 				if (!$e->isRetryable() || $i === ($maxRetries - 1)) {
 					throw $e;
 				}
+
+				usleep($sleep * $i);
+
 				logger('core')->warning('Retrying operation after retryable exception.', [ 'exception' => $e ]);
 			}
 		}
