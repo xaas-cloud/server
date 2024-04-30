@@ -89,6 +89,8 @@ class FileTest extends TestCase {
 		$userManager = \OC::$server->getUserManager();
 		$userManager->get($this->user)->delete();
 
+		// Reset invalid chars as we touched this during the tests
+		self::invokePrivate(\OCP\Util::class, 'invalidChars', [[]]);
 		parent::tearDown();
 	}
 
@@ -819,6 +821,8 @@ class FileTest extends TestCase {
 	 * Test put file with invalid chars
 	 */
 	public function testSimplePutInvalidChars(): void {
+		// Enforce * as an invalid character
+		self::invokePrivate(\OCP\Util::class, 'invalidChars', [['*']]);
 		// setup
 		$view = $this->getMockBuilder(View::class)
 			->setMethods(['getRelativePath'])
