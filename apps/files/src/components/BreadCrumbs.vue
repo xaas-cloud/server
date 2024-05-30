@@ -45,6 +45,7 @@ import NcBreadcrumb from '@nextcloud/vue/dist/Components/NcBreadcrumb.js'
 import NcBreadcrumbs from '@nextcloud/vue/dist/Components/NcBreadcrumbs.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 import { onDropInternalFiles, dataTransferToFileTree, onDropExternalFiles } from '../services/DropService'
 import { showError } from '@nextcloud/dialogs'
 import { useDragAndDropStore } from '../store/dragging.ts'
@@ -81,6 +82,7 @@ export default defineComponent({
 		const pathsStore = usePathsStore()
 		const selectionStore = useSelectionStore()
 		const uploaderStore = useUploaderStore()
+		const { dir: currentDir } = useRouteQuery()
 
 		return {
 			draggingStore,
@@ -88,6 +90,7 @@ export default defineComponent({
 			pathsStore,
 			selectionStore,
 			uploaderStore,
+			currentDir,
 		}
 	},
 
@@ -161,8 +164,12 @@ export default defineComponent({
 			return node?.attributes?.displayName || basename(path)
 		},
 
+		removeTrailingSlash(text: string): string {
+			return text.replace(/^(.+)\/$/, '$1')
+		},
+
 		onClick(to) {
-			if (to?.query?.dir === this.$route.query.dir) {
+			if (this.removeTrailingSlash(to?.query?.dir ?? '/') === this.currentDir) {
 				this.$emit('reload')
 			}
 		},
@@ -239,7 +246,7 @@ export default defineComponent({
 		},
 
 		titleForSection(index, section) {
-			if (section?.to?.query?.dir === this.$route.query.dir) {
+			if (this.removeTrailingSlash(section?.to?.query?.dir ?? '/') === this.currentDir) {
 				return t('files', 'Reload current directory')
 			} else if (index === 0) {
 				return t('files', 'Go to the "{dir}" directory', section)
@@ -248,7 +255,7 @@ export default defineComponent({
 		},
 
 		ariaForSection(section) {
-			if (section?.to?.query?.dir === this.$route.query.dir) {
+			if (this.removeTrailingSlash(section?.to?.query?.dir ?? '/') === this.currentDir) {
 				return t('files', 'Reload current directory')
 			}
 			return null

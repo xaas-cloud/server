@@ -43,12 +43,13 @@
 <script lang="ts">
 import { formatFileSize } from '@nextcloud/files'
 import { translate } from '@nextcloud/l10n'
-import Vue from 'vue'
+import { defineComponent } from 'vue'
 
 import { useFilesStore } from '../store/files.ts'
 import { usePathsStore } from '../store/paths.ts'
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 
-export default Vue.extend({
+export default defineComponent({
 	name: 'FilesListTableFooter',
 
 	components: {
@@ -80,20 +81,18 @@ export default Vue.extend({
 	setup() {
 		const pathsStore = usePathsStore()
 		const filesStore = useFilesStore()
+		const { dir } = useRouteQuery()
+
 		return {
 			filesStore,
 			pathsStore,
+			dir,
 		}
 	},
 
 	computed: {
 		currentView() {
 			return this.$navigation.active
-		},
-
-		dir() {
-			// Remove any trailing slash but leave root slash
-			return (this.$route?.query?.dir || '/').replace(/^(.+)\/$/, '$1')
 		},
 
 		currentFolder() {

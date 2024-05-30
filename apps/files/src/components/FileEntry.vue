@@ -84,17 +84,18 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue'
-import { Permission, formatFileSize } from '@nextcloud/files'
+import { formatFileSize } from '@nextcloud/files'
 import moment from '@nextcloud/moment'
+import NcDateTime from '@nextcloud/vue/dist/Components/NcDateTime.js'
 
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 import { useActionsMenuStore } from '../store/actionsmenu.ts'
 import { useDragAndDropStore } from '../store/dragging.ts'
 import { useFilesStore } from '../store/files.ts'
 import { useRenamingStore } from '../store/renaming.ts'
 import { useSelectionStore } from '../store/selection.ts'
 
-import FileEntryMixin from './FileEntryMixin.ts'
-import NcDateTime from '@nextcloud/vue/dist/Components/NcDateTime.js'
+import FileEntryMixin from '../mixins/FileEntryMixin.ts'
 import CustomElementRender from './CustomElementRender.vue'
 import FileEntryActions from './FileEntry/FileEntryActions.vue'
 import FileEntryCheckbox from './FileEntry/FileEntryCheckbox.vue'
@@ -138,12 +139,19 @@ export default defineComponent({
 		const filesStore = useFilesStore()
 		const renamingStore = useRenamingStore()
 		const selectionStore = useSelectionStore()
+		const {
+			dir: currentDir,
+			fileId: currentFileId,
+		} = useRouteQuery()
+
 		return {
 			actionsMenuStore,
 			draggingStore,
 			filesStore,
 			renamingStore,
 			selectionStore,
+			currentDir,
+			currentFileId,
 		}
 	},
 

@@ -58,12 +58,13 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 import { useActionsMenuStore } from '../store/actionsmenu.ts'
 import { useDragAndDropStore } from '../store/dragging.ts'
 import { useFilesStore } from '../store/files.ts'
 import { useRenamingStore } from '../store/renaming.ts'
 import { useSelectionStore } from '../store/selection.ts'
-import FileEntryMixin from './FileEntryMixin.ts'
+import FileEntryMixin from '../mixins/FileEntryMixin.ts'
 import FileEntryActions from './FileEntry/FileEntryActions.vue'
 import FileEntryCheckbox from './FileEntry/FileEntryCheckbox.vue'
 import FileEntryName from './FileEntry/FileEntryName.vue'
@@ -91,12 +92,19 @@ export default defineComponent({
 		const filesStore = useFilesStore()
 		const renamingStore = useRenamingStore()
 		const selectionStore = useSelectionStore()
+		const {
+			dir: currentDir,
+			fileId: currentFileId,
+		} = useRouteQuery()
+
 		return {
 			actionsMenuStore,
 			draggingStore,
 			filesStore,
 			renamingStore,
 			selectionStore,
+			currentDir,
+			currentFileId,
 		}
 	},
 

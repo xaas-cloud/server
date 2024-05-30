@@ -136,6 +136,7 @@ import AccountPlusIcon from 'vue-material-design-icons/AccountPlus.vue'
 import ViewGridIcon from 'vue-material-design-icons/ViewGrid.vue'
 
 import { action as sidebarAction } from '../actions/sidebarAction.ts'
+import { useRouteQuery } from '../composables/useRouteQuery'
 import { useFilesStore } from '../store/files.ts'
 import { usePathsStore } from '../store/paths.ts'
 import { useSelectionStore } from '../store/selection.ts'
@@ -185,6 +186,7 @@ export default defineComponent({
 		const uploaderStore = useUploaderStore()
 		const userConfigStore = useUserConfigStore()
 		const viewConfigStore = useViewConfigStore()
+		const { dir } = useRouteQuery()
 
 		const enableGridView = (loadState('core', 'config', [])['enable_non-accessible_features'] ?? true)
 
@@ -196,6 +198,7 @@ export default defineComponent({
 			userConfigStore,
 			viewConfigStore,
 			enableGridView,
+			dir,
 
 			// non reactive data
 			Type,
@@ -233,14 +236,6 @@ export default defineComponent({
 
 		pageHeading(): string {
 			return this.currentView?.name ?? t('files', 'Files')
-		},
-
-		/**
-		 * The current directory query.
-		 */
-		dir(): string {
-			// Remove any trailing slash but leave root slash
-			return (this.$route?.query?.dir?.toString() || '/').replace(/^(.+)\/$/, '$1')
 		},
 
 		/**

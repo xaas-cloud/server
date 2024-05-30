@@ -67,6 +67,7 @@ import { action as sidebarAction } from '../actions/sidebarAction.ts'
 import { getSummaryFor } from '../utils/fileUtils'
 import { useSelectionStore } from '../store/selection.js'
 import { useUserConfigStore } from '../store/userconfig.ts'
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 
 import FileEntry from './FileEntry.vue'
 import FileEntryGrid from './FileEntryGrid.vue'
@@ -111,9 +112,14 @@ export default defineComponent({
 	setup() {
 		const userConfigStore = useUserConfigStore()
 		const selectionStore = useSelectionStore()
+		const { fileId, isOpenFile } = useRouteQuery()
+
 		return {
 			userConfigStore,
 			selectionStore,
+
+			fileId,
+			isOpenFile,
 		}
 	},
 
@@ -130,18 +136,6 @@ export default defineComponent({
 	computed: {
 		userConfig(): UserConfig {
 			return this.userConfigStore.userConfig
-		},
-
-		fileId() {
-			return parseInt(this.$route.params.fileid) || null
-		},
-
-		/**
-		 * If the current `fileId` should be opened
-		 * The state of the `openfile` query param
-		 */
-		openFile() {
-			return !!this.$route.query.openfile
 		},
 
 		summary() {
@@ -193,7 +187,7 @@ export default defineComponent({
 			this.scrollToFile(fileId, false)
 		},
 
-		openFile(open: boolean) {
+		isOpenFile(open: boolean) {
 			if (open) {
 				this.$nextTick(() => this.handleOpenFile(this.fileId))
 			}

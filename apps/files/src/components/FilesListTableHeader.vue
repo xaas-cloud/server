@@ -54,16 +54,18 @@
 </template>
 
 <script lang="ts">
-import { translate as t } from '@nextcloud/l10n'
-import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
-import { defineComponent, type PropType } from 'vue'
+import type { Node } from '@nextcloud/files'
 
+import { translate as t } from '@nextcloud/l10n'
+import { defineComponent, type PropType } from 'vue'
+import NcCheckboxRadioSwitch from '@nextcloud/vue/dist/Components/NcCheckboxRadioSwitch.js'
+
+import { useRouteQuery } from '../composables/useRouteQuery.ts'
 import { useFilesStore } from '../store/files.ts'
 import { useSelectionStore } from '../store/selection.ts'
 import FilesListTableHeaderButton from './FilesListTableHeaderButton.vue'
 import filesSortingMixin from '../mixins/filesSorting.ts'
 import logger from '../logger.js'
-import type { Node } from '@nextcloud/files'
 
 export default defineComponent({
 	name: 'FilesListTableHeader',
@@ -99,9 +101,13 @@ export default defineComponent({
 	setup() {
 		const filesStore = useFilesStore()
 		const selectionStore = useSelectionStore()
+		const { dir } = useRouteQuery()
+
 		return {
 			filesStore,
 			selectionStore,
+
+			dir,
 		}
 	},
 
@@ -116,11 +122,6 @@ export default defineComponent({
 				return []
 			}
 			return this.currentView?.columns || []
-		},
-
-		dir() {
-			// Remove any trailing slash but leave root slash
-			return (this.$route?.query?.dir || '/').replace(/^(.+)\/$/, '$1')
 		},
 
 		selectAllBind() {

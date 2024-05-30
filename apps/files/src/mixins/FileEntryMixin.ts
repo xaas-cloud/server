@@ -5,11 +5,12 @@
 
 import type { PropType } from 'vue'
 
-import { extname } from 'path'
+import { showError } from '@nextcloud/dialogs'
 import { FileType, Permission, Folder, File as NcFile, NodeStatus, Node, View } from '@nextcloud/files'
-import { generateUrl } from '@nextcloud/router'
 import { translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
 import { vOnClickOutside } from '@vueuse/components'
+import { extname } from 'path'
 import Vue, { defineComponent } from 'vue'
 
 import { action as sidebarAction } from '../actions/sidebarAction.ts'
@@ -17,7 +18,6 @@ import { getDragAndDropPreview } from '../utils/dragUtils.ts'
 import { hashCode } from '../utils/hashUtils.ts'
 import { dataTransferToFileTree, onDropExternalFiles, onDropInternalFiles } from '../services/DropService.ts'
 import logger from '../logger.js'
-import { showError } from '@nextcloud/dialogs'
 
 Vue.directive('onClickOutside', vOnClickOutside)
 
@@ -48,14 +48,6 @@ export default defineComponent({
 	computed: {
 		currentView(): View {
 			return this.$navigation.active as View
-		},
-
-		currentDir() {
-			// Remove any trailing slash but leave root slash
-			return (this.$route?.query?.dir?.toString() || '/').replace(/^(.+)\/$/, '$1')
-		},
-		currentFileId() {
-			return this.$route.params?.fileid || this.$route.query?.fileid || null
 		},
 
 		fileid() {
