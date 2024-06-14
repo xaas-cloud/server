@@ -81,6 +81,7 @@ import type { PropType } from 'vue'
 import { DefaultType, FileAction, Node, NodeStatus, View, getFileActions } from '@nextcloud/files'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
+import { defineComponent, toRef } from 'vue'
 
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcActions from '@nextcloud/vue/dist/Components/NcActions.js'
@@ -88,9 +89,10 @@ import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 import ArrowLeftIcon from 'vue-material-design-icons/ArrowLeft.vue'
-import Vue, { defineComponent } from 'vue'
-
 import CustomElementRender from '../CustomElementRender.vue'
+
+import { useCurrentView } from '../../composables/useCurrentView.ts'
+import { useFileActions } from '../../composables/useFileActions.ts'
 import logger from '../../logger.js'
 
 // The registered actions list
@@ -132,6 +134,20 @@ export default defineComponent({
 		},
 	},
 
+	setup(props) {
+		const { currentView } = useCurrentView()
+		const {
+			defaultAction,
+			enabledActions,
+		} = useFileActions(toRef(props, 'source'), currentView)
+
+		return {
+			currentView,
+			defaultAction,
+			enabledActions,
+		}
+	},
+
 	data() {
 		return {
 			openedSubmenu: null as FileAction | null,
@@ -143,22 +159,9 @@ export default defineComponent({
 			// Remove any trailing slash but leave root slash
 			return (this.$route?.query?.dir?.toString() || '/').replace(/^(.+)\/$/, '$1')
 		},
-		currentView(): View {
-			return this.$navigation.active as View
-		},
+
 		isLoading() {
 			return this.source.status === NodeStatus.LOADING
-		},
-
-		// Sorted actions that are enabled for this node
-		enabledActions() {
-			if (this.source.attributes.failed) {
-				return []
-			}
-
-			return actions
-				.filter(action => !action.enabled || action.enabled([this.source], this.currentView))
-				.sort((a, b) => (a.order || 0) - (b.order || 0))
 		},
 
 		// Enabled action that are displayed inline
@@ -175,11 +178,6 @@ export default defineComponent({
 				return []
 			}
 			return this.enabledActions.filter(action => typeof action.renderInline === 'function')
-		},
-
-		// Default actions
-		enabledDefaultActions() {
-			return this.enabledActions.filter(action => !!action?.default)
 		},
 
 		// Actions shown in the menu
@@ -269,7 +267,7 @@ export default defineComponent({
 			try {
 				// Set the loading marker
 				this.$emit('update:loading', action.id)
-				Vue.set(this.source, 'status', NodeStatus.LOADING)
+				this.$set(this.source, 'status', NodeStatus.LOADING)
 
 				const success = await action.exec(this.source, this.currentView, this.currentDir)
 
@@ -289,7 +287,7 @@ export default defineComponent({
 			} finally {
 				// Reset the loading marker
 				this.$emit('update:loading', '')
-				Vue.set(this.source, 'status', undefined)
+				this.$set(this.source, 'status', undefined)
 
 				// If that was a submenu, we just go back after the action
 				if (isSubmenu) {
@@ -298,12 +296,8 @@ export default defineComponent({
 			}
 		},
 		execDefaultAction(event) {
-			if (this.enabledDefaultActions.length > 0) {
-				event.preventDefault()
-				event.stopPropagation()
-				// Execute the first default action if any
-				this.enabledDefaultActions[0].exec(this.source, this.currentView, this.currentDir)
-			}
+			// If there is one execute it
+			this.defaultAction?.exec(this.source, this.currentView, this.currentDir)
 		},
 
 		isMenu(id: string) {

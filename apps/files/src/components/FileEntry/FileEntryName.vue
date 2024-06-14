@@ -37,7 +37,7 @@
 </template>
 
 <script lang="ts">
-import type { Node, View } from '@nextcloud/files'
+import type { Node } from '@nextcloud/files'
 import type { PropType } from 'vue'
 
 import { showError, showSuccess } from '@nextcloud/dialogs'
@@ -45,13 +45,15 @@ import { emit } from '@nextcloud/event-bus'
 import { FileType, NodeStatus, Permission } from '@nextcloud/files'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
+import { defineComponent, toRef } from 'vue'
 import axios from '@nextcloud/axios'
-import { isAxiosError } from 'axios'
-import Vue, { defineComponent } from 'vue'
+import Axios from 'axios'
 
 import NcTextField from '@nextcloud/vue/dist/Components/NcTextField.js'
 
 import { useRenamingStore } from '../../store/renaming.ts'
+import { useCurrentView } from '../../composables/useCurrentView'
+import { useFileActions } from '../../composables/useFileActions'
 import logger from '../../logger.js'
 
 const forbiddenCharacters = loadState<string[]>('files', 'forbiddenCharacters', [])
@@ -90,18 +92,20 @@ export default defineComponent({
 		},
 	},
 
-	setup() {
+	setup(props) {
 		const renamingStore = useRenamingStore()
+		const { currentView } = useCurrentView()
+		const { defaultAction } = useFileActions(toRef(props, 'source'), currentView)
+
 		return {
+			currentView,
+			defaultAction,
+
 			renamingStore,
 		}
 	},
 
 	computed: {
-		currentView(): View {
-			return this.$navigation.active as View
-		},
-
 		isRenaming() {
 			return this.renamingStore.renamingNode === this.source
 		},
@@ -135,10 +139,8 @@ export default defineComponent({
 				}
 			}
 
-			const enabledDefaultActions = this.$parent?.$refs?.actions?.enabledDefaultActions
-			if (enabledDefaultActions?.length > 0) {
-				const action = enabledDefaultActions[0]
-				const displayName = action.displayName([this.source], this.currentView)
+			if (this.defaultAction !== null) {
+				const displayName = this.defaultAction.displayName([this.source], this.currentView)
 				return {
 					is: 'a',
 					params: {
@@ -283,7 +285,7 @@ export default defineComponent({
 			}
 
 			// Set loading state
-			Vue.set(this.source, 'status', NodeStatus.LOADING)
+			this.$set(this.source, 'status', NodeStatus.LOADING)
 
 			// Update node
 			this.source.rename(newName)
@@ -314,7 +316,7 @@ export default defineComponent({
 				this.source.rename(oldName)
 				this.$refs.renameInput?.focus()
 
-				if (isAxiosError(error)) {
+				if (Axios.isAxiosError(error)) {
 					// TODO: 409 means current folder does not exist, redirect ?
 					if (error?.response?.status === 404) {
 						showError(t('files', 'Could not rename "{oldName}", it does not exist any more', { oldName }))
@@ -328,7 +330,7 @@ export default defineComponent({
 				// Unknown error
 				showError(t('files', 'Could not rename "{oldName}"', { oldName }))
 			} finally {
-				Vue.set(this.source, 'status', undefined)
+				this.$set(this.source, 'status', undefined)
 			}
 		},
 
