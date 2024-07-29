@@ -8,11 +8,16 @@
 namespace OCA\Files\Controller;
 
 use OC\Files\Node\Node;
+use OC\Files\Search\SearchComparison;
+use OC\Files\Search\SearchQuery;
 use OCA\Files\Service\TagService;
 use OCA\Files\Service\UserConfig;
 use OCA\Files\Service\ViewConfig;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\ApiRoute;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\DataResponse;
@@ -20,10 +25,14 @@ use OCP\AppFramework\Http\FileDisplayResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StreamResponse;
+use OCP\Files\Cache\ICacheEntry;
 use OCP\Files\File;
 use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
+use OCP\Files\Search\ISearchComparison;
 use OCP\IConfig;
+use OCP\IL10N;
 use OCP\IPreview;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -34,34 +43,20 @@ use OCP\Share\IShare;
  * @package OCA\Files\Controller
  */
 class ApiController extends Controller {
-	private TagService $tagService;
-	private IManager $shareManager;
-	private IPreview $previewManager;
-	private IUserSession $userSession;
-	private IConfig $config;
-	private ?Folder $userFolder;
-	private UserConfig $userConfig;
-	private ViewConfig $viewConfig;
-
 	public function __construct(string $appName,
 		IRequest $request,
-		IUserSession $userSession,
-		TagService $tagService,
-		IPreview $previewManager,
-		IManager $shareManager,
-		IConfig $config,
-		?Folder $userFolder,
-		UserConfig $userConfig,
-		ViewConfig $viewConfig) {
+		private IUserSession $userSession,
+		private TagService $tagService,
+		private IPreview $previewManager,
+		private IManager $shareManager,
+		private IConfig $config,
+		private ?Folder $userFolder,
+		private UserConfig $userConfig,
+		private ViewConfig $viewConfig,
+		private IL10N $l10n,
+		private IRootFolder $rootFolder,
+	) {
 		parent::__construct($appName, $request);
-		$this->userSession = $userSession;
-		$this->tagService = $tagService;
-		$this->previewManager = $previewManager;
-		$this->shareManager = $shareManager;
-		$this->config = $config;
-		$this->userFolder = $userFolder;
-		$this->userConfig = $userConfig;
-		$this->viewConfig = $viewConfig;
 	}
 
 	/**
@@ -231,6 +226,109 @@ class ApiController extends Controller {
 		return new DataResponse(['files' => $files]);
 	}
 
+	/**
+	 * @param Folder[] $folders
+	 */
+	private function getChildrenFromAllFolders(array $folders): array {
+		$user = $this->userSession->getUser();
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$tree = [];
+
+		foreach ($folders as $folder) {
+			$path = $userFolder->getRelativePath($folder->getPath());
+			$pathSegments = explode('/', trim($path, '/'));
+			$current = &$tree;
+			foreach ($pathSegments as $name) {
+				if (empty($current['children'][$name])) {
+					$current['children'][$name] = [
+						'children' => [],
+					];
+					if ($name !== $folder->getName()) {
+						$current['children'][$name]['displayName'] = $folder->getName();
+					}
+				}
+				$current = &$current['children'][$name];
+			}
+		}
+
+		return $tree['children'] ?? $tree;
+	}
+
+	/**
+	 * Returns a folder tree of the user's files.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired] // TODO Remove
+	#[ApiRoute(verb: 'GET', url: '/api/v1/folder-tree-search')]
+	public function getFolderTreeSearch(): JSONResponse {
+		$user = $this->userSession->getUser();
+
+		$start = microtime(true);
+		try {
+			$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+			$searchQuery = new SearchQuery(
+				new SearchComparison(ISearchComparison::COMPARE_EQUAL, 'mimetype', ICacheEntry::DIRECTORY_MIMETYPE),
+				0,
+				0,
+				[],
+				$user,
+				false,
+			);
+			/** @var Folder[] $folders */
+			$folders = $userFolder->search($searchQuery);
+			$children = $this->getChildrenFromAllFolders($folders);
+		} catch (\RuntimeException $e) {
+			$children = [];
+		}
+		$executionTime = microtime(true) - $start;
+
+		return new JSONResponse([
+			'executionTime' => $executionTime,
+			'children' => $children,
+		]);
+	}
+
+	/**
+	 * @param \OCP\Files\Node[] $nodes
+	 */
+	private function getChildren(array $nodes): array {
+		$children = [];
+		foreach ($nodes as $node) {
+			if (!($node instanceof Folder)) {
+				continue;
+			}
+			$basename = basename($node->getPath());
+			$entry = [
+				'basename' => $basename,
+				'children' => $this->getChildren($node->getDirectoryListing()),
+			];
+			if ($basename !== $node->getName()) {
+				$entry['displayName'] = $node->getName();
+			}
+			$children[] = $entry;
+		}
+		return $children;
+   }
+
+	/**
+	 * Returns a folder tree of the user's files.
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired] // TODO Remove
+	#[ApiRoute(verb: 'GET', url: '/api/v1/folder-tree')]
+	public function getFolderTree(): JSONResponse {
+		$user = $this->userSession->getUser();
+
+		$start = microtime(true);
+		$userFolder = $this->rootFolder->getUserFolder($user->getUID());
+		$children = $this->getChildren($userFolder->getDirectoryListing());
+		$executionTime = microtime(true) - $start;
+
+		return new JSONResponse([
+			'executionTime' => $executionTime,
+			'children' => $children,
+		]);
+	}
 
 	/**
 	 * Returns the current logged-in user's storage stats.
