@@ -11,6 +11,16 @@ namespace Test\AppFramework\Db;
 use OCP\AppFramework\Db\Entity;
 use PHPUnit\Framework\Constraint\IsType;
 
+enum TestIntEnum: int {
+	case First = 1;
+	case Second = 2;
+}
+
+enum TestStringEnum: string {
+	case First = 'f';
+	case Second = 's';
+}
+
 /**
  * @method integer getId()
  * @method void setId(integer $id)
@@ -30,6 +40,10 @@ use PHPUnit\Framework\Constraint\IsType;
  * @method void setAnotherBool(bool $anotherBool)
  * @method string getLongText()
  * @method void setLongText(string $longText)
+ * @method TestIntEnum getIntEnum()
+ * @method void setIntEnum(TestIntEnum $intEnum)
+ * @method TestStringEnum getStringEnum()
+ * @method void setStringEnum(TestStringEnum $stringEnum)
  */
 class TestEntity extends Entity {
 	protected $name;
@@ -39,16 +53,19 @@ class TestEntity extends Entity {
 	protected $trueOrFalse;
 	protected $anotherBool;
 	protected $longText;
+	protected $intEnum;
+	protected $stringEnum;
 
 	public function __construct($name = null) {
 		$this->addType('testId', 'integer');
 		$this->addType('trueOrFalse', 'bool');
 		$this->addType('anotherBool', 'boolean');
 		$this->addType('longText', 'blob');
+		$this->addType('intEnum', TestIntEnum::class);
+		$this->addType('stringEnum', TestStringEnum::class);
 		$this->name = $name;
 	}
 }
-
 
 class EntityTest extends \Test\TestCase {
 	private $entity;
@@ -211,6 +228,30 @@ class EntityTest extends \Test\TestCase {
 		$this->assertSame($string, $entity->getLongText());
 	}
 
+	public function testSetterSerializesIntEnum() {
+		$entity = new TestEntity();
+		$entity->setIntEnum(TestIntEnum::Second->value);
+		$this->assertSame(TestIntEnum::Second, $entity->getIntEnum());
+	}
+
+	public function testSetterSerializesIntEnumAlreadyConverted() {
+		$entity = new TestEntity();
+		$entity->setIntEnum(TestIntEnum::Second);
+		$this->assertSame(TestIntEnum::Second, $entity->getIntEnum());
+	}
+
+	public function testSetterSerializesStringEnum() {
+		$entity = new TestEntity();
+		$entity->setStringEnum(TestStringEnum::First->value);
+		$this->assertSame(TestStringEnum::First, $entity->getStringEnum());
+	}
+
+	public function testSetterSerializesStringEnumAlreadyConverted() {
+		$entity = new TestEntity();
+		$entity->setStringEnum(TestStringEnum::First);
+		$this->assertSame(TestStringEnum::First, $entity->getStringEnum());
+	}
+
 
 	public function testGetFieldTypes() {
 		$entity = new TestEntity();
@@ -220,6 +261,8 @@ class EntityTest extends \Test\TestCase {
 			'trueOrFalse' => 'bool',
 			'anotherBool' => 'boolean',
 			'longText' => 'blob',
+			'intEnum' => TestIntEnum::class,
+			'stringEnum' => TestStringEnum::class
 		], $entity->getFieldTypes());
 	}
 

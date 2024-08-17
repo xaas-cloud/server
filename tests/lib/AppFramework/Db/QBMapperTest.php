@@ -11,6 +11,17 @@ use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\QueryBuilder\IExpressionBuilder;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
+use PHPUnit\Framework\MockObject\MockObject;
+
+enum QBTestIntEnum: int {
+	case First = 1;
+	case Second = 2;
+}
+
+enum QBTestStringEnum: string {
+	case First = 'f';
+	case Second = 's';
+}
 
 /**
  * @method bool getBoolProp()
@@ -23,6 +34,10 @@ use OCP\IDBConnection;
  * @method void setBooleanProp(bool $booleanProp)
  * @method integer getIntegerProp()
  * @method void setIntegerProp(integer $integerProp)
+ * @method QBTestIntEnum getIntEnumProp()
+ * @method void setIntEnumProp(QBTestIntEnum $intEnumProp)
+ * @method QBTestStringEnum getStringEnumProp()
+ * @method void setStringEnumProp(QBTestStringEnum $intEnumProp)
  */
 class QBTestEntity extends Entity {
 	protected $intProp;
@@ -31,6 +46,8 @@ class QBTestEntity extends Entity {
 	protected $integerProp;
 	protected $booleanProp;
 	protected $jsonProp;
+	protected $intEnumProp;
+	protected $stringEnumProp;
 
 	public function __construct() {
 		$this->addType('intProp', 'int');
@@ -39,6 +56,8 @@ class QBTestEntity extends Entity {
 		$this->addType('integerProp', 'integer');
 		$this->addType('booleanProp', 'boolean');
 		$this->addType('jsonProp', 'json');
+		$this->addType('intEnumProp', QBTestIntEnum::class);
+		$this->addType('stringEnumProp', QBTestStringEnum::class);
 	}
 }
 
@@ -63,25 +82,10 @@ class QBTestMapper extends QBMapper {
  * @package Test\AppFramework\Db
  */
 class QBMapperTest extends \Test\TestCase {
-	/**
-	 * @var \PHPUnit\Framework\MockObject\MockObject|IDBConnection
-	 */
-	protected $db;
-
-	/**
-	 * @var \PHPUnit\Framework\MockObject\MockObject|IQueryBuilder
-	 */
-	protected $qb;
-
-	/**
-	 * @var \PHPUnit\Framework\MockObject\MockObject|IExpressionBuilder
-	 */
-	protected $expr;
-
-	/**
-	 * @var \Test\AppFramework\Db\QBTestMapper
-	 */
-	protected $mapper;
+	protected IDBConnection&MockObject $db;
+	protected IQueryBuilder&MockObject $qb;
+	protected IExpressionBuilder&MockObject $expr;
+	protected QBTestMapper $mapper;
 
 	/**
 	 * @throws \ReflectionException
@@ -154,6 +158,8 @@ class QBMapperTest extends \Test\TestCase {
 		$entity->setIntegerProp(456);
 		$entity->setBooleanProp(false);
 		$entity->setJsonProp(["hello" => "world"]);
+		$entity->setIntEnumProp(QBTestIntEnum::First);
+		$entity->setStringEnumProp(QBTestStringEnum::Second);
 
 		$idParam = $this->qb->createNamedParameter('id', IQueryBuilder::PARAM_INT);
 		$intParam = $this->qb->createNamedParameter('int_prop', IQueryBuilder::PARAM_INT);
@@ -162,8 +168,10 @@ class QBMapperTest extends \Test\TestCase {
 		$integerParam = $this->qb->createNamedParameter('integer_prop', IQueryBuilder::PARAM_INT);
 		$booleanParam = $this->qb->createNamedParameter('boolean_prop', IQueryBuilder::PARAM_BOOL);
 		$jsonParam = $this->qb->createNamedParameter('json_prop', IQueryBuilder::PARAM_JSON);
+		$intEnumProp = $this->qb->createNamedParameter('int_enum_prop', IQueryBuilder::PARAM_INT);
+		$stringEnumProp = $this->qb->createNamedParameter('string_enum_prop', IQueryBuilder::PARAM_STR);
 
-		$this->qb->expects($this->exactly(7))
+		$this->qb->expects($this->exactly(9))
 			->method('createNamedParameter')
 			->withConsecutive(
 				[$this->equalTo(123), $this->equalTo(IQueryBuilder::PARAM_INT)],
@@ -172,10 +180,12 @@ class QBMapperTest extends \Test\TestCase {
 				[$this->equalTo(456), $this->equalTo(IQueryBuilder::PARAM_INT)],
 				[$this->equalTo(false), $this->equalTo(IQueryBuilder::PARAM_BOOL)],
 				[$this->equalTo(["hello" => "world"]), $this->equalTo(IQueryBuilder::PARAM_JSON)],
+				[$this->equalTo(QBTestIntEnum::First->value), $this->equalTo(IQueryBuilder::PARAM_INT)],
+				[$this->equalTo(QBTestStringEnum::Second->value), $this->equalTo(IQueryBuilder::PARAM_STR)],
 				[$this->equalTo(789), $this->equalTo(IQueryBuilder::PARAM_INT)],
 			);
 
-		$this->qb->expects($this->exactly(6))
+		$this->qb->expects($this->exactly(8))
 			->method('set')
 			->withConsecutive(
 				[$this->equalTo('int_prop'), $this->equalTo($intParam)],
@@ -183,13 +193,14 @@ class QBMapperTest extends \Test\TestCase {
 				[$this->equalTo('string_prop'), $this->equalTo($stringParam)],
 				[$this->equalTo('integer_prop'), $this->equalTo($integerParam)],
 				[$this->equalTo('boolean_prop'), $this->equalTo($booleanParam)],
-				[$this->equalTo('json_prop'), $this->equalTo($jsonParam)]
+				[$this->equalTo('json_prop'), $this->equalTo($jsonParam)],
+				[$this->equalTo('int_enum_prop'), $this->equalTo($intEnumProp)],
+				[$this->equalTo('string_enum_prop'), $this->equalTo($stringEnumProp)],
 			);
 
 		$this->expr->expects($this->once())
 			->method('eq')
 			->with($this->equalTo('id'), $this->equalTo($idParam));
-
 
 		$this->mapper->update($entity);
 	}

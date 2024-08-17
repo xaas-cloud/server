@@ -107,8 +107,13 @@ abstract class QBMapper {
 			$column = $entity->propertyToColumn($property);
 			$getter = 'get' . ucfirst($property);
 			$value = $entity->$getter();
+			if ($value instanceof \BackedEnum) {
+				$value = $value->value;
+				$type = is_int($value) ? IQueryBuilder::PARAM_INT : IQueryBuilder::PARAM_STR;
+			} else {
+				$type = $this->getParameterTypeForProperty($entity, $property);
+			}
 
-			$type = $this->getParameterTypeForProperty($entity, $property);
 			$qb->setValue($column, $qb->createNamedParameter($value, $type));
 		}
 
@@ -184,8 +189,12 @@ abstract class QBMapper {
 			$column = $entity->propertyToColumn($property);
 			$getter = 'get' . ucfirst($property);
 			$value = $entity->$getter();
-
-			$type = $this->getParameterTypeForProperty($entity, $property);
+			if ($value instanceof \BackedEnum) {
+				$value = $value->value;
+				$type = is_int($value) ? IQueryBuilder::PARAM_INT : IQueryBuilder::PARAM_STR;
+			} else {
+				$type = $this->getParameterTypeForProperty($entity, $property);
+			}
 			$qb->set($column, $qb->createNamedParameter($value, $type));
 		}
 

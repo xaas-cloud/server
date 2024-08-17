@@ -111,6 +111,10 @@ abstract class Entity {
 					if (!is_array($args[0])) {
 						$args[0] = json_decode($args[0], true);
 					}
+				} elseif(\enum_exists($type)) {
+					if (!$args[0] instanceof \BackedEnum) {
+						$args[0] = $type::tryFrom($args[0]);
+					}
 				} else {
 					settype($args[0], $type);
 				}
@@ -235,7 +239,15 @@ abstract class Entity {
 
 	/**
 	 * Adds type information for a field so that its automatically casted to
-	 * that value once its being returned from the database
+	 * that value once its being returned from the database.
+	 *
+	 * By default the `$type` parameter is used to call `settype` on the argument for casting,
+	 * but there is some special handling:
+	 * - `blob` is always read into a string
+	 * - `json` is automatically JSON decoded
+	 * - `datetime` if no \DateTime object is returned from the database the value will be passed to the \DateTime constructor
+	 * - Passing a class string that implements the \BackedEnum as `$type` will (de)serialize into that \BackedEnum
+	 * 
 	 * @param string $fieldName the name of the attribute
 	 * @param string $type the type which will be used to call settype()
 	 * @since 7.0.0
@@ -243,7 +255,6 @@ abstract class Entity {
 	protected function addType($fieldName, $type) {
 		$this->_fieldTypes[$fieldName] = $type;
 	}
-
 
 	/**
 	 * Slugify the value of a given attribute
