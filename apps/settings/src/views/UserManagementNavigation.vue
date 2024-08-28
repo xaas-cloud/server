@@ -4,7 +4,14 @@
 -->
 <template>
 	<NcAppNavigation :aria-label="t('settings', 'Account management')">
+		<template #search>
+			<NcAppNavigationSearch
+				v-model="searchStore.query"
+				:label="t('files', 'Filter accounts and groups')" />
+		</template>
+
 		<NcAppNavigationNew button-id="new-user-button"
+			class="account-management__new-account"
 			:text="t('settings','New account')"
 			@click="showNewUserMenu"
 			@keyup.enter="showNewUserMenu"
@@ -54,7 +61,7 @@
 					<NcIconSvgWrapper :path="mdiHistory" />
 				</template>
 				<template #counter>
-					<NcCounterBubble v-if="recentGroup?.usercount > 0"
+					<NcCounterBubble v-if="recentGroup?.usercount"
 						:type="selectedGroupDecoded === '__nc_internal_recent' ? 'highlighted' : undefined">
 						{{ recentGroup.usercount }}
 					</NcCounterBubble>
@@ -82,6 +89,7 @@
 			:disabled="loadingAddGroup"
 			:aria-label="loadingAddGroup ? t('settings', 'Creating group…') : t('settings', 'Create group')"
 			force-menu
+			heading-id="custom-group-list-heading"
 			is-heading
 			:open.sync="isAddGroupOpen">
 			<template #actionsTriggerIcon>
@@ -106,13 +114,17 @@
 			</template>
 		</NcAppNavigationCaption>
 
-		<NcAppNavigationList class="account-management__group-list" data-cy-users-settings-navigation-groups="custom">
-			<GroupListItem v-for="group in userGroups"
+		<NcAppNavigationList aria-labelledby="custom-group-list-heading"
+			class="account-management__group-list"
+			data-cy-users-settings-navigation-groups="custom">
+			<GroupListItem v-for="group in filteredUserGroups"
 				:id="group.id"
 				:key="group.id"
 				:active="selectedGroupDecoded === group.id"
 				:name="group.title"
 				:count="group.count" />
+			<NcAppNavigationCaption v-if="searchStore.hasQuery && filteredUserGroups.length === 0"
+				:name="t('settings', 'No groups matching your filter.')" />
 		</NcAppNavigationList>
 
 		<template #footer>
@@ -132,7 +144,7 @@
 <script setup lang="ts">
 import { mdiAccount, mdiAccountOff, mdiCog, mdiPlus, mdiShieldAccount, mdiHistory } from '@mdi/js'
 import { showError } from '@nextcloud/dialogs'
-import { translate as t } from '@nextcloud/l10n'
+import { t } from '@nextcloud/l10n'
 import { computed, ref } from 'vue'
 
 import NcActionInput from '@nextcloud/vue/dist/Components/NcActionInput.js'
@@ -142,6 +154,7 @@ import NcAppNavigationCaption from '@nextcloud/vue/dist/Components/NcAppNavigati
 import NcAppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
 import NcAppNavigationList from '@nextcloud/vue/dist/Components/NcAppNavigationList.js'
 import NcAppNavigationNew from '@nextcloud/vue/dist/Components/NcAppNavigationNew.js'
+import NcAppNavigationSearch from '@nextcloud/vue/dist/Components/NcAppNavigationSearch.js'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcCounterBubble from '@nextcloud/vue/dist/Components/NcCounterBubble.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
@@ -152,6 +165,7 @@ import UserSettingsDialog from '../components/Users/UserSettingsDialog.vue'
 import { useStore } from '../store'
 import { useRoute, useRouter } from 'vue-router/composables'
 import { useFormatGroups } from '../composables/useGroupsNavigation'
+import { useAccountSearchStore } from '../store/account-search'
 
 const route = useRoute()
 const router = useRouter()
@@ -173,6 +187,17 @@ const { adminGroup, recentGroup, disabledGroup, userGroups } = useFormatGroups(g
 
 /** True if the current user is an administrator */
 const isAdmin = computed(() => store.getters.getServerData.isAdmin)
+
+const searchStore = useAccountSearchStore()
+const filteredUserGroups = computed(() => {
+	const search = searchStore.query.trim().toLocaleLowerCase()
+	// return all groups if no query
+	if (!search) {
+		return userGroups.value
+	}
+	// otherwise return only groups matching the filter
+	return userGroups.value.filter((group) => group.title.toLocaleLowerCase().includes(search))
+})
 
 /** True if the 'add-group' dialog is open - needed to be able to close it when the group is created */
 const isAddGroupOpen = ref(false)
@@ -225,6 +250,10 @@ function showNewUserMenu() {
 
 <style scoped lang="scss">
 .account-management{
+	&__new-account {
+		padding-block-start: 0;
+	}
+
 	&__system-list {
 		height: auto !important;
 		overflow: visible !important;

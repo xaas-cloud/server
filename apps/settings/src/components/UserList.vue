@@ -62,7 +62,6 @@
 <script>
 import { mdiAccountGroup } from '@mdi/js'
 import { showError } from '@nextcloud/dialogs'
-import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { Fragment } from 'vue-frag'
 
 import Vue from 'vue'
@@ -78,6 +77,7 @@ import UserRow from './Users/UserRow.vue'
 
 import { defaultQuota, isObfuscated, unlimitedQuota } from '../utils/userUtils.ts'
 import logger from '../logger.ts'
+import { useAccountSearchStore } from '../store/account-search.ts'
 
 const newUser = Object.freeze({
 	id: '',
@@ -120,10 +120,12 @@ export default {
 	},
 
 	setup() {
-		// non reactive properties
+		const searchStore = useAccountSearchStore()
+
 		return {
 			mdiAccountGroup,
 			rowHeight: 55,
+			searchStore,
 
 			UserRow,
 		}
@@ -138,7 +140,6 @@ export default {
 			},
 			newUser: { ...newUser },
 			isInitialLoad: true,
-			searchQuery: '',
 		}
 	},
 
@@ -198,6 +199,10 @@ export default {
 			return quotaPreset
 		},
 
+		searchQuery() {
+			return this.searchStore.query
+		},
+
 		usersOffset() {
 			return this.$store.getters.getUsersOffset
 		},
@@ -234,6 +239,11 @@ export default {
 	},
 
 	watch: {
+		searchQuery() {
+			this.$store.commit('resetUsers')
+			this.loadUsers()
+		},
+
 		// watch url change and group select
 		async selectedGroup(val) {
 			this.isInitialLoad = true
@@ -264,20 +274,9 @@ export default {
 		this.resetForm()
 
 		/**
-		 * Register search
-		 */
-		subscribe('nextcloud:unified-search.search', this.search)
-		subscribe('nextcloud:unified-search.reset', this.resetSearch)
-
-		/**
 		 * If disabled group but empty, redirect
 		 */
 		await this.redirectIfDisabled()
-	},
-
-	beforeDestroy() {
-		unsubscribe('nextcloud:unified-search.search', this.search)
-		unsubscribe('nextcloud:unified-search.reset', this.resetSearch)
 	},
 
 	methods: {
@@ -322,16 +321,6 @@ export default {
 				key: 'showNewUserForm',
 				value: false,
 			})
-		},
-
-		async search({ query }) {
-			this.searchQuery = query
-			this.$store.commit('resetUsers')
-			await this.loadUsers()
-		},
-
-		resetSearch() {
-			this.search({ query: '' })
 		},
 
 		resetForm() {
