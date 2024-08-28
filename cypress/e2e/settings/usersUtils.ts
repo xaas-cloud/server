@@ -27,6 +27,14 @@ export function getUserList() {
 }
 
 /**
+ * Get the group list
+ */
+export function getGroupList(): Cypress.Chainable<JQuery> {
+	return cy.findByRole('navigation', { name: 'Account management' })
+		.findByRole('list', { name: 'Groups' })
+}
+
+/**
  * Get the row entry for given userId within the settings users list
  *
  * @param userId the user to query

@@ -76,6 +76,12 @@ declare global {
 			 * Default is the post-setup state
 			 */
 			restoreDB(snapshot?: string): Cypress.Chainable,
+
+			/**
+			 * Remove the user data directory for listed users
+			 * @param user user ids
+			 */
+			removeUserData(user: string[]): Cypress.Chainable,
 		}
 	}
 }
@@ -286,6 +292,15 @@ Cypress.Commands.add('resetUserTheming', (user?: User) => {
 Cypress.Commands.add('runOccCommand', (command: string, options?: Partial<Cypress.ExecOptions>) => {
 	const env = Object.entries(options?.env ?? {}).map(([name, value]) => `-e '${name}=${value}'`).join(' ')
 	return cy.exec(`docker exec --user www-data ${env} nextcloud-cypress-tests-server php ./occ ${command}`, options)
+})
+
+Cypress.Commands.add('removeUserData', (users: string[]) => {
+	if (users.some((user) => user.includes('/') || user.startsWith('.'))) {
+		throw new Error('user id contains invalid character')
+	}
+	users = users.map((user) => `"data/${user}"`)
+	
+	return cy.exec(`docker exec --user www-data nextcloud-cypress-tests-server rm -fr ${users.join(' ')}`)
 })
 
 Cypress.Commands.add('backupDB', (): Cypress.Chainable<string> => {
