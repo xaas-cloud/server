@@ -32,6 +32,8 @@ use Psr\Log\LoggerInterface;
  * @psalm-import-type DeclarativeSettingsFormSchemaWithoutValues from IDeclarativeSettingsForm
  */
 class DeclarativeManager implements IDeclarativeManager {
+	private bool $loaded = false;
+
 	public function __construct(
 		private IEventDispatcher $eventDispatcher,
 		private IGroupManager    $groupManager,
@@ -77,6 +79,11 @@ class DeclarativeManager implements IDeclarativeManager {
 	 * @inheritdoc
 	 */
 	public function loadSchemas(): void {
+		if ($this->loaded) {
+			return;
+		}
+		$this->loaded = true;
+
 		$declarativeSettings = $this->coordinator->getRegistrationContext()->getDeclarativeSettings();
 		foreach ($declarativeSettings as $declarativeSetting) {
 			/** @var IDeclarativeSettingsForm $declarativeSettingObject */
