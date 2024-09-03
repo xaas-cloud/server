@@ -26,7 +26,7 @@ namespace OCP\Settings;
  *   placeholder?: string,
  *   label?: string,
  *   default: mixed,
- *   options?: list<string|array{name: string, value: mixed}>,
+ *   options?: list<mixed>|list<array{name: string, value: mixed}>,
  * }
  *
  * @psalm-type DeclarativeSettingsFormFieldWithValue = DeclarativeSettingsFormField&array{
