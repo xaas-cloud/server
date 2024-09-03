@@ -18,15 +18,19 @@ namespace OCP\Settings;
  *
  * @psalm-type DeclarativeSettingsValueTypes = string|int|float|bool|list<string>
  *
+ * @psalm-type DeclarativeSettingsFormFieldType = 'text'|'password'|'email'|'tel'|'url'|'number'|'checkbox'|'multi-checkbox'|'radio'|'select'|'multi-select'
+ *
+ * @psalm-type DeclarativeSettingsFormFieldOptions = list<mixed>|list<array{name: string, value: mixed}>
+ *
  * @psalm-type DeclarativeSettingsFormField = array{
  *   id: string,
  *   title: string,
  *   description?: string,
- *   type: 'text'|'password'|'email'|'tel'|'url'|'number'|'checkbox'|'multi-checkbox'|'radio'|'select'|'multi-select',
+ *   type: DeclarativeSettingsFormFieldType,
  *   placeholder?: string,
  *   label?: string,
  *   default: mixed,
- *   options?: list<mixed>|list<array{name: string, value: mixed}>,
+ *   options?: DeclarativeSettingsFormFieldOptions,
  * }
  *
  * @psalm-type DeclarativeSettingsFormFieldWithValue = DeclarativeSettingsFormField&array{

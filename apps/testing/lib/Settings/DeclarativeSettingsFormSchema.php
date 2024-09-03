@@ -10,16 +10,16 @@ namespace OCA\Testing\Settings;
 use OCP\Settings\DeclarativeSettingsTypes;
 use OCP\Settings\IDeclarativeSettingsForm;
 
-class DeclarativeSettingsForm implements IDeclarativeSettingsForm {
+class DeclarativeSettingsFormSchema implements IDeclarativeSettingsForm {
 	public function getSchema(): array {
 		return [
-			'id' => 'test_declarative_form',
+			'id' => 'test_declarative_form_schema',
 			'priority' => 10,
 			'section_type' => DeclarativeSettingsTypes::SECTION_TYPE_ADMIN, // admin, personal
 			'section_id' => 'additional',
 			'storage_type' => DeclarativeSettingsTypes::STORAGE_TYPE_INTERNAL, // external, internal (handled by core to store in appconfig and preferences)
-			'title' => 'Test declarative settings class', // NcSettingsSection name
-			'description' => 'This form is registered with a DeclarativeSettingsForm class', // NcSettingsSection description
+			'title' => 'Test declarative settings class schema', // NcSettingsSection name
+			'description' => 'This form is registered with a IDeclarativeSettingsForm class', // NcSettingsSection description
 			'doc_url' => '', // NcSettingsSection doc_url for documentation or help page, empty string if not needed
 			'fields' => [
 				[

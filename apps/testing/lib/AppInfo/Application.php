@@ -14,7 +14,8 @@ use OCA\Testing\Provider\FakeText2ImageProvider;
 use OCA\Testing\Provider\FakeTextProcessingProvider;
 use OCA\Testing\Provider\FakeTextProcessingProviderSync;
 use OCA\Testing\Provider\FakeTranslationProvider;
-use OCA\Testing\Settings\DeclarativeSettingsForm;
+use OCA\Testing\Settings\DeclarativeSettingsFormSchema;
+use OCA\Testing\Settings\DeclarativeSettingsFormTyped;
 use OCA\Testing\TaskProcessing\FakeContextWriteProvider;
 use OCA\Testing\TaskProcessing\FakeTextToImageProvider;
 use OCA\Testing\TaskProcessing\FakeTextToTextProvider;
@@ -47,7 +48,8 @@ class Application extends App implements IBootstrap {
 		$context->registerTaskProcessingProvider(FakeTranscribeProvider::class);
 		$context->registerTaskProcessingProvider(FakeContextWriteProvider::class);
 
-		$context->registerDeclarativeSettings(DeclarativeSettingsForm::class);
+		$context->registerDeclarativeSettings(DeclarativeSettingsFormSchema::class);
+		$context->registerDeclarativeSettings(DeclarativeSettingsFormTyped::class);
 		$context->registerEventListener(DeclarativeSettingsRegisterFormEvent::class, RegisterDeclarativeSettingsListener::class);
 		$context->registerEventListener(DeclarativeSettingsGetValueEvent::class, GetDeclarativeSettingsValueListener::class);
 		$context->registerEventListener(DeclarativeSettingsSetValueEvent::class, SetDeclarativeSettingsValueListener::class);
