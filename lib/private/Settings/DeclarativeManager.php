@@ -235,7 +235,7 @@ class DeclarativeManager implements IDeclarativeManager {
 				$this->eventDispatcher->dispatchTyped($event);
 				return $event->getValue();
 			case DeclarativeSettingsTypes::STORAGE_TYPE_INTERNAL:
-				return $this->getInternalValue($user, $app, $formId, $fieldId);
+				return $this->getInternalValue($user, $app, $fieldId);
 			default:
 				throw new Exception('Unknown storage type "' . $storageType . '"');
 		}
@@ -261,9 +261,9 @@ class DeclarativeManager implements IDeclarativeManager {
 		}
 	}
 
-	private function getInternalValue(IUser $user, string $app, string $formId, string $fieldId): mixed {
+	private function getInternalValue(IUser $user, string $app, string $fieldId): mixed {
 		$sectionType = $this->getSectionType($app, $fieldId);
-		$defaultValue = $this->getDefaultValue($app, $formId, $fieldId);
+		$defaultValue = $this->getDefaultValue($app, $fieldId);
 		switch ($sectionType) {
 			case DeclarativeSettingsTypes::SECTION_TYPE_ADMIN:
 				return $this->config->getAppValue($app, $fieldId, $defaultValue);
@@ -288,17 +288,15 @@ class DeclarativeManager implements IDeclarativeManager {
 		}
 	}
 
-	private function getDefaultValue(string $app, string $formId, string $fieldId): mixed {
+	private function getDefaultValue(string $app, string $fieldId): mixed {
 		foreach ($this->appSchemas[$app] as $schema) {
-			if ($schema['id'] === $formId) {
-				foreach ($schema['fields'] as $field) {
-					if ($field['id'] === $fieldId) {
-						if (isset($field['default'])) {
-							if (is_array($field['default'])) {
-								return json_encode($field['default']);
-							}
-							return $field['default'];
+			foreach ($schema['fields'] as $field) {
+				if ($field['id'] === $fieldId) {
+					if (isset($field['default'])) {
+						if (is_array($field['default'])) {
+							return json_encode($field['default']);
 						}
+						return $field['default'];
 					}
 				}
 			}
