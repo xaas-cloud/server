@@ -72,4 +72,28 @@ interface IDeclarativeManager {
 	 * @since 29.0.0
 	 */
 	public function setValue(IUser $user, string $app, string $formId, string $fieldId, mixed $value): void;
+
+	/**
+	 * Returns the value of the given field ID.
+	 *
+	 * @param IUser $user Used for storing values in the personal section or for authorization for the admin section.
+	 *
+	 * @throws Exception
+	 * @throws NotAdminException
+	 *
+	 * @since 31.0.0
+	 */
+	public function getValue(IUser $user, string $app, string $formId, string $fieldId): mixed;
+
+	/**
+	 * Deletes the value of the given field ID.
+	 *
+	 * @param IUser $user Used for storing values in the personal section or for authorization for the admin section.
+	 *
+	 * @throws Exception
+	 * @throws NotAdminException
+	 *
+	 * @since 31.0.0
+	 */
+	public function deleteValue(IUser $user, string $app, string $formId, string $fieldId): void;
 }

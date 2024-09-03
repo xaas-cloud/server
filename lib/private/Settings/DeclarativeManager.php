@@ -5,6 +5,7 @@ declare(strict_types=1);
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+
 namespace OC\Settings;
 
 use Exception;
@@ -17,6 +18,7 @@ use OCP\IGroupManager;
 use OCP\IUser;
 use OCP\Server;
 use OCP\Settings\DeclarativeSettingsTypes;
+use OCP\Settings\Events\DeclarativeSettingsDeleteValueEvent;
 use OCP\Settings\Events\DeclarativeSettingsGetValueEvent;
 use OCP\Settings\Events\DeclarativeSettingsRegisterFormEvent;
 use OCP\Settings\Events\DeclarativeSettingsSetValueEvent;
@@ -36,11 +38,11 @@ class DeclarativeManager implements IDeclarativeManager {
 
 	public function __construct(
 		private IEventDispatcher $eventDispatcher,
-		private IGroupManager    $groupManager,
-		private Coordinator      $coordinator,
-		private IConfig          $config,
-		private IAppConfig       $appConfig,
-		private LoggerInterface  $logger,
+		private IGroupManager $groupManager,
+		private Coordinator $coordinator,
+		private IConfig $config,
+		private IAppConfig $appConfig,
+		private LoggerInterface $logger,
 	) {
 	}
 
@@ -65,8 +67,8 @@ class DeclarativeManager implements IDeclarativeManager {
 			}
 		}
 
-		$fieldIDs = array_map(fn ($field) => $field['id'], $schema['fields']);
-		$otherFieldIDs = array_merge(...array_map(fn ($schema) => array_map(fn ($field) => $field['id'], $schema['fields']), $this->appSchemas[$app]));
+		$fieldIDs = array_map(fn($field) => $field['id'], $schema['fields']);
+		$otherFieldIDs = array_merge(...array_map(fn($schema) => array_map(fn($field) => $field['id'], $schema['fields']), $this->appSchemas[$app]));
 		$intersectionFieldIDs = array_intersect($fieldIDs, $otherFieldIDs);
 		if (count($intersectionFieldIDs) > 0) {
 			throw new Exception('Non unique field IDs detected: ' . join(', ', $intersectionFieldIDs));
@@ -220,11 +222,33 @@ class DeclarativeManager implements IDeclarativeManager {
 	}
 
 	/**
+	 * @throws Exception
+	 * @throws NotAdminException
+	 */
+	public function deleteValue(IUser $user, string $app, string $formId, string $fieldId): void {
+		$sectionType = $this->getSectionType($app, $fieldId);
+		$this->assertAuthorized($user, $sectionType);
+
+		$storageType = $this->getStorageType($app, $fieldId);
+		switch ($storageType) {
+			case DeclarativeSettingsTypes::STORAGE_TYPE_EXTERNAL:
+				$event = new DeclarativeSettingsDeleteValueEvent($user, $app, $formId, $fieldId);
+				$this->eventDispatcher->dispatchTyped($event);
+				break;
+			case DeclarativeSettingsTypes::STORAGE_TYPE_INTERNAL:
+				$this->deleteInternalValue($user, $app, $fieldId);
+				break;
+			default:
+				throw new Exception('Unknown storage type "' . $storageType . '"');
+		}
+	}
+
+	/**
 	 * @return DeclarativeSettingsValueTypes
 	 * @throws Exception
 	 * @throws NotAdminException
 	 */
-	private function getValue(IUser $user, string $app, string $formId, string $fieldId): mixed {
+	public function getValue(IUser $user, string $app, string $formId, string $fieldId): mixed {
 		$sectionType = $this->getSectionType($app, $fieldId);
 		$this->assertAuthorized($user, $sectionType);
 
@@ -254,7 +278,7 @@ class DeclarativeManager implements IDeclarativeManager {
 				$this->eventDispatcher->dispatchTyped(new DeclarativeSettingsSetValueEvent($user, $app, $formId, $fieldId, $value));
 				break;
 			case DeclarativeSettingsTypes::STORAGE_TYPE_INTERNAL:
-				$this->saveInternalValue($user, $app, $fieldId, $value);
+				$this->setInternalValue($user, $app, $fieldId, $value);
 				break;
 			default:
 				throw new Exception('Unknown storage type "' . $storageType . '"');
@@ -274,11 +298,11 @@ class DeclarativeManager implements IDeclarativeManager {
 		}
 	}
 
-	private function saveInternalValue(IUser $user, string $app, string $fieldId, mixed $value): void {
+	private function setInternalValue(IUser $user, string $app, string $fieldId, mixed $value): void {
 		$sectionType = $this->getSectionType($app, $fieldId);
 		switch ($sectionType) {
 			case DeclarativeSettingsTypes::SECTION_TYPE_ADMIN:
-				$this->appConfig->setValueString($app, $fieldId, $value);
+				$this->config->setAppValue($app, $fieldId, $value);
 				break;
 			case DeclarativeSettingsTypes::SECTION_TYPE_PERSONAL:
 				$this->config->setUserValue($user->getUID(), $app, $fieldId, $value);
@@ -288,16 +312,25 @@ class DeclarativeManager implements IDeclarativeManager {
 		}
 	}
 
+	private function deleteInternalValue(IUser $user, string $app, string $fieldId): void {
+		$sectionType = $this->getSectionType($app, $fieldId);
+		switch ($sectionType) {
+			case DeclarativeSettingsTypes::SECTION_TYPE_ADMIN:
+				$this->appConfig->deleteKey($app, $fieldId);
+				break;
+			case DeclarativeSettingsTypes::SECTION_TYPE_PERSONAL:
+				$this->config->deleteUserValue($user->getUID(), $app, $fieldId);
+				break;
+			default:
+				throw new Exception('Unknown section type "' . $sectionType . '"');
+		}
+	}
+
 	private function getDefaultValue(string $app, string $fieldId): mixed {
 		foreach ($this->appSchemas[$app] as $schema) {
 			foreach ($schema['fields'] as $field) {
-				if ($field['id'] === $fieldId) {
-					if (isset($field['default'])) {
-						if (is_array($field['default'])) {
-							return json_encode($field['default']);
-						}
-						return $field['default'];
-					}
+				if ($field['id'] === $fieldId && isset($field['default'])) {
+					return $field['default'];
 				}
 			}
 		}

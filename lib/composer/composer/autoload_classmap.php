@@ -692,6 +692,7 @@ return array(
     'OCP\\Settings\\DeclarativeSettingsForm' => $baseDir . '/lib/public/Settings/DeclarativeSettingsForm.php',
     'OCP\\Settings\\DeclarativeSettingsOptionInt' => $baseDir . '/lib/public/Settings/DeclarativeSettingsOptionInt.php',
     'OCP\\Settings\\DeclarativeSettingsTypes' => $baseDir . '/lib/public/Settings/DeclarativeSettingsTypes.php',
+    'OCP\\Settings\\Events\\DeclarativeSettingsDeleteValueEvent' => $baseDir . '/lib/public/Settings/Events/DeclarativeSettingsDeleteValueEvent.php',
     'OCP\\Settings\\Events\\DeclarativeSettingsGetValueEvent' => $baseDir . '/lib/public/Settings/Events/DeclarativeSettingsGetValueEvent.php',
     'OCP\\Settings\\Events\\DeclarativeSettingsRegisterFormEvent' => $baseDir . '/lib/public/Settings/Events/DeclarativeSettingsRegisterFormEvent.php',
     'OCP\\Settings\\Events\\DeclarativeSettingsSetValueEvent' => $baseDir . '/lib/public/Settings/Events/DeclarativeSettingsSetValueEvent.php',

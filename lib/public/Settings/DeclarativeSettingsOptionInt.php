@@ -9,15 +9,21 @@ declare(strict_types=1);
 
 namespace OCP\Settings;
 
+use OC\Settings\DeclarativeSettingsOption;
+
 /**
  * @psalm-import-type DeclarativeSettingsFormFieldType from IDeclarativeSettingsForm
  * @psalm-import-type DeclarativeSettingsFormFieldOptions from IDeclarativeSettingsForm
  */
 class DeclarativeSettingsOptionInt implements IDeclarativeSettingsOption {
+	private DeclarativeSettingsOption $internal;
+
 	/**
 	 * @param DeclarativeSettingsFormFieldOptions $options
 	 */
 	public function __construct(
+		public readonly string $appName,
+		public readonly DeclarativeSettingsForm $form,
 		public readonly string $id,
 		public readonly string $title,
 		public readonly int $default,
@@ -26,6 +32,7 @@ class DeclarativeSettingsOptionInt implements IDeclarativeSettingsOption {
 		public readonly ?string $placeholder = null,
 		public readonly ?string $label = null,
 	) {
+		$this->internal = new DeclarativeSettingsOption($this->appName, $this->form, $this->id);
 	}
 
 	public function getId(): string {
@@ -58,5 +65,17 @@ class DeclarativeSettingsOptionInt implements IDeclarativeSettingsOption {
 
 	public function getOptions(): mixed {
 		return $this->options;
+	}
+
+	public function setValue(int $value): void {
+		$this->internal->setValue($value);
+	}
+
+	public function getValue(): int {
+		return $this->internal->getValue();
+	}
+
+	public function deleteValue(): void {
+		$this->internal->deleteValue();
 	}
 }

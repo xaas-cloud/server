@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace OCA\Testing\Settings;
 
+use OCA\Testing\AppInfo\Application;
 use OCP\Settings\DeclarativeSettingsForm;
 use OCP\Settings\DeclarativeSettingsOptionInt;
 use OCP\Settings\DeclarativeSettingsTypes;
@@ -17,6 +18,8 @@ class DeclarativeSettingsFormTyped extends DeclarativeSettingsForm {
 
 	public function __construct() {
 		$this->test = new DeclarativeSettingsOptionInt(
+			appName: Application::APP_ID,
+			form: $this,
 			id: 'test_ex_app_field_8',
 			title: 'Multi-selection',
 			default: 2,
