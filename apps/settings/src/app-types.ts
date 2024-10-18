@@ -39,6 +39,8 @@ export interface IAppstoreApp {
 	category: string|string[]
 
 	preview?: string
+	/** The preview is an icon */
+	previewAsIcon: boolean
 	screenshot?: string
 
 	active: boolean
@@ -48,6 +50,10 @@ export interface IAppstoreApp {
 	canInstall: boolean
 	canUninstall: boolean
 	isCompatible: boolean
+	/** Available version to update to */
+	update?: string
+
+	score: number
 
 	appstoreData: Record<string, never>
 	releases?: IAppstoreAppRelease[]

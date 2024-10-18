@@ -11,26 +11,9 @@
 			'app-item--selected': isSelected,
 			'app-item--with-sidebar': withSidebar,
 		}">
-		<component :is="dataItemTag"
-			class="app-image app-image-icon"
-			:headers="getDataItemHeaders(`app-table-col-icon`)">
-			<div v-if="(listView && !app.preview) || (!listView && !screenshotLoaded)" class="icon-settings-dark" />
-
-			<svg v-else-if="listView && app.preview"
-				width="32"
-				height="32"
-				viewBox="0 0 32 32">
-				<image x="0"
-					y="0"
-					width="32"
-					height="32"
-					preserveAspectRatio="xMinYMin meet"
-					:xlink:href="app.preview"
-					class="app-icon" />
-			</svg>
-
-			<img v-if="!listView && app.screenshot && screenshotLoaded" :src="app.screenshot" alt="">
-		</component>
+		<AppItemIcon :app="app"
+			:list-view="listView"
+			:headers="useBundleView ? `${headers} app-table-col-icon` : undefined" />
 		<component :is="dataItemTag"
 			class="app-name"
 			:headers="getDataItemHeaders(`app-table-col-name`)">
