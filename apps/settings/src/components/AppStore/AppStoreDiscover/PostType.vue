@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts">
-import type { IAppDiscoverPost } from '../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverPost } from '../../../constants/AppDiscoverTypes.ts'
 import type { PropType } from 'vue'
 
 import { mdiPlayCircleOutline } from '@mdi/js'
@@ -63,7 +63,7 @@ import { generateUrl } from '@nextcloud/router'
 import { useElementSize, useElementVisibility } from '@vueuse/core'
 import { computed, defineComponent, ref, watchEffect } from 'vue'
 import { commonAppDiscoverProps } from './common'
-import { useLocalizedValue } from '../../composables/useGetLocalizedValue'
+import { useLocalizedValue } from '../../../composables/useGetLocalizedValue'
 
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import AppLink from './AppLink.vue'

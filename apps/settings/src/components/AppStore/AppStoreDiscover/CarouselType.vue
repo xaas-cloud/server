@@ -61,13 +61,13 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { IAppDiscoverCarousel } from '../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverCarousel } from '../../../constants/AppDiscoverTypes.ts'
 
 import { mdiChevronLeft, mdiChevronRight, mdiCircleOutline, mdiCircleSlice8 } from '@mdi/js'
 import { translate as t } from '@nextcloud/l10n'
 import { computed, defineComponent, nextTick, ref, watch } from 'vue'
 import { commonAppDiscoverProps } from './common.ts'
-import { useLocalizedValue } from '../../composables/useGetLocalizedValue.ts'
+import { useLocalizedValue } from '../../../composables/useGetLocalizedValue.ts'
 
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'

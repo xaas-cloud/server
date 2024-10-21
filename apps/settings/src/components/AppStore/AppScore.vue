@@ -19,6 +19,7 @@
 			inline />
 	</span>
 </template>
+
 <script lang="ts">
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import { mdiStar, mdiStarHalfFull, mdiStarOutline } from '@mdi/js'
@@ -60,7 +61,8 @@ export default defineComponent({
 	},
 })
 </script>
-<style scoped>
+
+<style scoped lang="scss">
 .app-score__wrapper {
 	display: inline-flex;
 	color: var(--color-favorite, #a08b00);

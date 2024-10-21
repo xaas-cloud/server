@@ -184,9 +184,9 @@ import NcDateTime from '@nextcloud/vue/dist/Components/NcDateTime.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 
-import AppManagement from '../../mixins/AppManagement.js'
+import AppManagement from '../../../mixins/AppManagement.js'
 import { mdiBug, mdiFeatureSearch, mdiStar, mdiTextBox, mdiTooltipQuestion } from '@mdi/js'
-import { useAppsStore } from '../../store/apps-store'
+import { useAppsStore } from '../../../store/apps-store'
 
 export default {
 	name: 'AppDetailsTab',

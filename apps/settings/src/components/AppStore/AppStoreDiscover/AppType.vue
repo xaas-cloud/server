@@ -7,8 +7,7 @@
 		:app="app"
 		category="discover"
 		class="app-discover-app"
-		inline
-		:list-view="false" />
+		inline />
 	<a v-else
 		class="app-discover-app app-discover-app__skeleton"
 		:href="appStoreLink"
@@ -25,12 +24,12 @@
 </template>
 
 <script setup lang="ts">
-import type { IAppDiscoverApp } from '../../constants/AppDiscoverTypes'
+import type { IAppDiscoverApp } from '../../../constants/AppDiscoverTypes'
 
 import { computed } from 'vue'
-import { useAppsStore } from '../../store/apps-store.ts'
+import { useAppsStore } from '../../../store/apps-store.ts'
 
-import AppItem from '../AppList/AppItem.vue'
+import AppItem from '../AppItem/AppItem.vue'
 
 const props = defineProps<{
 	modelValue: IAppDiscoverApp

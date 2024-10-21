@@ -17,14 +17,14 @@
 </template>
 
 <script setup lang="ts">
-import type { IAppstoreApp } from '../../app-types'
+import type { IAppstoreApp } from '../../../app-types'
 
 import { mdiTextShort } from '@mdi/js'
 import { translate as t } from '@nextcloud/l10n'
 
 import NcAppSidebarTab from '@nextcloud/vue/dist/Components/NcAppSidebarTab.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
-import Markdown from '../Markdown.vue'
+import Markdown from '../../Markdown.vue'
 
 defineProps<{
 	app: IAppstoreApp,

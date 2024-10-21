@@ -27,13 +27,13 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { IAppDiscoverShowcase } from '../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverShowcase } from '../../../constants/AppDiscoverTypes.ts'
 
 import { translate as t } from '@nextcloud/l10n'
 import { useElementSize } from '@vueuse/core'
 import { computed, defineComponent, ref } from 'vue'
 import { commonAppDiscoverProps } from './common.ts'
-import { useLocalizedValue } from '../../composables/useGetLocalizedValue.ts'
+import { useLocalizedValue } from '../../../composables/useGetLocalizedValue.ts'
 
 import AppType from './AppType.vue'
 import PostType from './PostType.vue'

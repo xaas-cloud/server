@@ -18,7 +18,7 @@ import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
 import { defineComponent } from 'vue'
 import { RouterLink } from 'vue-router'
-import type { INavigationEntry } from '../../../../../core/src/types/navigation'
+import type { INavigationEntry } from '../../../../../../core/src/types/navigation'
 
 const apps = loadState<INavigationEntry[]>('core', 'apps')
 const knownRoutes = Object.fromEntries(apps.map((app) => [app.app ?? app.id, app.href]))

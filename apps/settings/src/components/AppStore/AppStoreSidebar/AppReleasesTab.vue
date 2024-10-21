@@ -19,7 +19,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IAppstoreApp, IAppstoreAppRelease } from '../../app-types.ts'
+import type { IAppstoreApp, IAppstoreAppRelease } from '../../../app-types.ts'
 
 import { mdiClockFast } from '@mdi/js'
 import { getLanguage, translate as t } from '@nextcloud/l10n'
@@ -27,7 +27,7 @@ import { computed } from 'vue'
 
 import NcAppSidebarTab from '@nextcloud/vue/dist/Components/NcAppSidebarTab.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
-import Markdown from '../Markdown.vue'
+import Markdown from '../../Markdown.vue'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{ app: IAppstoreApp }>()
