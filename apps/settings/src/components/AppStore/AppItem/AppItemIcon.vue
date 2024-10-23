@@ -4,15 +4,16 @@
 -->
 
 <script setup lang="ts">
-import type { IAppstoreApp } from '../../../app-types'
+import type { IAppStoreApp } from '../../../constants/AppStoreTypes.ts'
 import { computed, ref, watchEffect } from 'vue'
 import IconSettings from 'vue-material-design-icons/Cog.vue'
 
 import { preloadImage } from '../../../service/imagePreloading.ts'
+import logger from '../../../logger.ts';
 
 const props = defineProps<{
-	app: IAppstoreApp
-	listView: boolean
+	app: IAppStoreApp
+	listView?: boolean
 }>()
 
 /**
@@ -44,6 +45,7 @@ watchEffect(() => {
 	if (hasPreview.value) {
 		preloadImage(previewUrl.value!)
 			.then(() => { previewLoaded.value = true })
+			.catch((error) => logger.debug(`Failed to load screenshot for ${props.app.name}`, { error }))
 	}
 })
 
@@ -68,7 +70,9 @@ const tag = computed(() => props.listView ? 'td' : 'div')
 
 <style scoped lang="scss">
 .app-item-icon {
-	height: auto;
+	--app-icon-size: 20px;
+
+	height: var(--app-icon-size);
 	width: var(--default-clickable-area);
 	position: relative;
 	overflow: hidden;
@@ -78,8 +82,8 @@ const tag = computed(() => props.listView ? 'td' : 'div')
 	}
 
 	.app-item-icon__image {
-		height: 20px;
-		width: 20px;
+		height: var(--app-icon-size);
+		width: var(--app-icon-size);
 
 		&--is-icon {
 			// if an icon is shown we need to adjust the color if needed
@@ -89,12 +93,12 @@ const tag = computed(() => props.listView ? 'td' : 'div')
 	}
 
 	&--grid {
-		height: 150px;
+		--app-icon-size: 150px;
 		width: auto;
 
 		.app-item-icon__image,
 		.app-item-icon__fallback {
-			height: 150px;
+			height: var(--app-icon-size);
 			width: 100%;
 			object-fit: cover;
 		}

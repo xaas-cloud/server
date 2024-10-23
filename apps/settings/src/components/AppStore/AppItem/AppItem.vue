@@ -9,7 +9,6 @@
 			'app-item--list-view': listView,
 			'app-item--store-view': !listView,
 			'app-item--selected': isSelected,
-			'app-item--with-sidebar': withSidebar,
 		}">
 		<AppItemIcon :app="app"
 			:list-view="listView"
@@ -23,38 +22,45 @@
 
 		<component :is="dataItemTag"
 			v-if="!listView"
-			class="app-summary"
+			class="app-item__summary"
 			:headers="getDataItemHeaders(`app-version`)">
 			{{ app.summary }}
 		</component>
 
 		<component :is="dataItemTag"
 			v-if="listView"
-			class="app-version"
+			v-show="!isSmallMobile"
+			class="app-item__version"
 			:headers="getDataItemHeaders(`app-table-col-version`)">
 			<span v-if="app.version">{{ app.version }}</span>
-			<span v-else-if="app.appstoreData.releases[0].version">{{ app.appstoreData.releases[0].version }}</span>
+			<span v-else-if="app.releases?.[0].version">{{ app?.releases[0].version }}</span>
 		</component>
 
-		<component :is="dataItemTag" :headers="getDataItemHeaders(`app-table-col-level`)" class="app-level">
+		<component
+			:is="dataItemTag"
+			v-show="!listView || !isSmallMobile"
+			class="app-item__level"
+			:headers="getDataItemHeaders(`app-table-col-level`)">
 			<AppLevelBadge :level="app.level" />
-			<AppScore v-if="hasRating && !listView" :score="app.score" />
+			<AppScore v-if="appRating && !listView" :score="appRating" />
 		</component>
 
 		<AppItemActions v-if="!inline"
-			v-show="!isSmallMobile"
 			:app="app"
+			:data-item-tag="dataItemTag"
+			:list-view="listView"
 			:headers="getDataItemHeaders('app-table-col-actions')" />
 	</component>
 </template>
 
 <script setup lang="ts">
 import type { PropType } from 'vue'
-import type { IAppstoreApp } from '../../../app-types'
+import type { IAppStoreApp } from '../../../constants/AppStoreTypes'
 
 import { useIsSmallMobile } from '@nextcloud/vue/dist/Composables/useIsMobile.js'
 import { useRoute } from 'vue-router/composables'
-import { computed } from 'vue'
+import { computed, toRef } from 'vue'
+import { useAppRating } from '../../../composables/useAppRating'
 
 import AppItemActions from './AppItemActions.vue'
 import AppItemIcon from './AppItemIcon.vue'
@@ -67,7 +73,7 @@ const props = defineProps({
 	 * The app to show
 	 */
 	app: {
-		type: Object as PropType<IAppstoreApp>,
+		type: Object as PropType<IAppStoreApp>,
 		required: true,
 	},
 
@@ -115,6 +121,7 @@ const props = defineProps({
 
 const route = useRoute()
 const isSmallMobile = useIsSmallMobile()
+const appRating = useAppRating(toRef(props, 'app'))
 
 /**
  * The HTML tag to use.
@@ -122,21 +129,9 @@ const isSmallMobile = useIsSmallMobile()
 const dataItemTag = computed(() => props.listView ? 'td' : 'div')
 
 /**
- * If the rating should be shown.
- * This is true if at least five rating were sent.
- */
-const hasRating = computed(() => props.app.appstoreData?.ratingNumOverall > 5)
-
-/**
- * Is the sidebar shown.
- * The sidebar is always shown if an app is selected.
- */
-const withSidebar = computed(() => Boolean(route.params.id))
-
-/**
  * Is this app is the currently selected app
  */
-const isSelected = computed(() => route.params.id === props.app.id)
+const isSelected = computed(() => route.params.appId === props.app.id)
 
 /**
  * Set table header association to a table cell.
@@ -150,10 +145,8 @@ function getDataItemHeaders(columnName: string) {
 </script>
 
 <style scoped lang="scss">
-@use '../../../../../../core/css/variables.scss' as variables;
-@use 'sass:math';
-
 .app-item {
+	box-sizing: border-box;
 	position: relative;
 
 	&:hover {
@@ -161,9 +154,6 @@ function getDataItemHeaders(columnName: string) {
 	}
 
 	&--list-view {
-		--app-item-padding: calc(var(--default-grid-baseline) * 2);
-		--app-item-height: calc(var(--default-clickable-area) + var(--app-item-padding) * 2);
-
 		&.app-item--selected {
 			background-color: var(--color-background-dark);
 		}
@@ -174,62 +164,21 @@ function getDataItemHeaders(columnName: string) {
 			padding: var(--app-item-padding);
 			height: var(--app-item-height);
 		}
-
-		/* hide app version and level on narrower screens */
-		@media only screen and (max-width: 900px) {
-			.app-version,
-			.app-level {
-				display: none;
-			}
-		}
 	}
 
 	&--store-view {
-		padding: 30px;
+		border-radius: var(--border-radius-container);
+		padding: calc(3 * var(--default-grid-baseline));
+		display: flex;
+		flex-direction: column;
 
-		@media only screen and (min-width: 1601px) {
-			width: 25%;
-
-			&.app-item--with-sidebar {
-				width: 33%;
-			}
-		}
-
-		@media only screen and (max-width: 1600px) {
-			width: 25%;
-
-			&.app-item--with-sidebar {
-				width: 33%;
-			}
-		}
-
-		@media only screen and (max-width: 1400px) {
-			width: 33%;
-
-			&.app-item--with-sidebar {
-				width: 50%;
-			}
-		}
-
-		@media only screen and (max-width: 900px) {
-			width: 50%;
-
-			&.app-item--with-sidebar {
-				width: 100%;
-			}
-		}
-
-		@media only screen and (max-width: variables.$breakpoint-mobile) {
-			width: 50%;
-		}
-
-		@media only screen and (max-width: 480px) {
-			width: 100%;
+		&.app-item--selected {
+			outline: 2px solid var(--color-main-text);
 		}
 	}
 }
 
-.app-version {
+.app-item__version {
 	color: var(--color-text-maxcontrast);
 }
 </style>

@@ -4,31 +4,32 @@
 -->
 
 <script setup lang="ts">
-import type { IAppstoreApp } from '../../../app-types'
+import type { IAppStoreApp } from '../../../constants/AppStoreTypes'
+
 import { computed } from 'vue'
+import { useRoute } from 'vue-router/composables'
 
 const props = defineProps<{
-	app: IAppstoreApp
+	app: IAppStoreApp
 	category: string
 	listView: boolean
 }>()
+
+const route = useRoute()
 
 /**
  * The HTML tag to use - depending on the list vs grid view
  */
 const tag = computed(() => props.listView ? 'td' : 'div')
+const to = computed(() => route.name === 'discover'
+	? { name: 'discover', params: { appId: props.app.id } }
+	: { name: 'app-details', params: { category: props.category, appId: props.app.id } },
+)
 </script>
 
 <template>
 	<component :is="tag" class="app-item-name">
-		<router-link class="app-item-name__link"
-			:to="{
-				name: 'apps-details',
-				params: {
-					category: category,
-					id: app.id
-				},
-			}">
+		<router-link class="app-item-name__link" :to="to">
 			{{ app.name }}
 		</router-link>
 	</component>
@@ -36,6 +37,7 @@ const tag = computed(() => props.listView ? 'td' : 'div')
 
 <style scoped lang="scss">
 .app-item-name {
+	font-weight: bold;
 	margin: calc(2 * var(--default-grid-baseline)) 0;
 
 	&__link::after {
@@ -47,6 +49,7 @@ const tag = computed(() => props.listView ? 'td' : 'div')
 
 	// The list view
 	&--list-view {
+		font-weight: normal;
 		margin: 0;
 		padding: 0 var(--app-item-padding);
 
