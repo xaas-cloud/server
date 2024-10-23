@@ -17,16 +17,14 @@
 		@close="hideAppDetails">
 		<!-- Fallback icon incase no app icon is available -->
 		<template v-if="!hasScreenshot" #header>
-			<NcIconSvgWrapper class="app-sidebar__fallback-icon"
-				:svg="appIcon ?? ''"
-				:size="64" />
+			<AppItemIcon :app="app" class="app-sidebar__fallback-icon" />
 		</template>
 
 		<template #description>
 			<!-- Featured/Supported badges -->
 			<div class="app-sidebar__badges">
 				<AppLevelBadge :level="app.level" />
-				<AppScore v-if="hasRating" :score="rating" />
+				<AppScore v-if="appRating" :score="appRating" />
 			</div>
 		</template>
 
@@ -39,32 +37,30 @@
 
 <script setup lang="ts">
 import { translate as t } from '@nextcloud/l10n'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router/composables'
-import { useAppsStore } from '../store/apps-store'
+import { useAppRating } from '../../composables/useAppRating.ts'
+import { useAppStore } from '../../store/appStore.ts'
+import { preloadImage } from '../../service/imagePreloading.ts'
 
 import NcAppSidebar from '@nextcloud/vue/dist/Components/NcAppSidebar.js'
-import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
-import AppScore from '../components/AppList/AppScore.vue'
-import AppDescriptionTab from '../components/AppStoreSidebar/AppDescriptionTab.vue'
-import AppDetailsTab from '../components/AppStoreSidebar/AppDetailsTab.vue'
-import AppReleasesTab from '../components/AppStoreSidebar/AppReleasesTab.vue'
-import AppLevelBadge from '../components/AppList/AppLevelBadge.vue'
-import { useAppIcon } from '../composables/useAppIcon.ts'
+import AppScore from '../../components/AppStore/AppScore.vue'
+import AppLevelBadge from '../../components/AppStore/AppLevelBadge.vue'
+import AppDescriptionTab from '../../components/AppStore/AppStoreSidebar/AppDescriptionTab.vue'
+import AppDetailsTab from '../../components/AppStore/AppStoreSidebar/AppDetailsTab.vue'
+import AppReleasesTab from '../../components/AppStore/AppStoreSidebar/AppReleasesTab.vue'
+import AppItemIcon from '../../components/AppStore/AppItem/AppItemIcon.vue'
+import logger from '../../logger.ts'
 
 const route = useRoute()
 const router = useRouter()
-const store = useAppsStore()
+const store = useAppStore()
 
-const appId = computed(() => route.params.id ?? '')
+const appId = computed(() => route.params.appId ?? '')
 const app = computed(() => store.getAppById(appId.value)!)
-const hasRating = computed(() => app.value.appstoreData?.ratingNumOverall > 5)
-const rating = computed(() => app.value.appstoreData?.ratingNumRecent > 5
-	? app.value.appstoreData.ratingRecent
-	: (app.value.appstoreData?.ratingOverall ?? 0.5))
-const showSidebar = computed(() => app.value !== null)
+const appRating = useAppRating(app)
 
-const { appIcon } = useAppIcon(app)
+const showSidebar = computed(() => app.value !== null)
 
 /**
  * The second text line shown on the sidebar
@@ -78,10 +74,10 @@ watch([app], () => { activeTab.value = 'details' })
  * Hide the details sidebar by pushing a new route
  */
 const hideAppDetails = () => {
-	router.push({
-		name: 'apps-category',
-		params: { category: route.params.category },
-	})
+	router.push(route.name === 'discover'
+		? { name: 'discover' }
+		: { name: 'app-category', params: { category: route.params.category } },
+	)
 }
 
 /**
@@ -89,21 +85,14 @@ const hideAppDetails = () => {
  */
 const screenshotLoaded = ref(false)
 const hasScreenshot = computed(() => app.value?.screenshot && screenshotLoaded.value)
-/**
- * Preload the app screenshot
- */
-const loadScreenshot = () => {
-	if (app.value?.releases && app.value?.screenshot) {
-		const image = new Image()
-		image.onload = () => {
-			screenshotLoaded.value = true
-		}
-		image.src = app.value.screenshot
+watchEffect(() => {
+	if (app.value?.screenshot) {
+		screenshotLoaded.value = false
+		preloadImage(app.value.screenshot)
+			.then(() => { screenshotLoaded.value = true })
+			.catch((error) => logger.warn('Could not load preview for app', { app: app.value, error }))
 	}
-}
-// Watch app and set screenshot loaded when
-watch([app], loadScreenshot)
-onMounted(loadScreenshot)
+})
 </script>
 
 <style scoped lang="scss">
@@ -116,9 +105,7 @@ onMounted(loadScreenshot)
 	}
 
 	&__fallback-icon {
-		// both 100% to center the icon
-		width: 100%;
-		height: 100%;
+		--app-icon-size: 100% !important;
 	}
 
 	&__badges {

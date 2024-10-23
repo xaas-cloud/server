@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import type { IAppstoreApp } from '../../../app-types'
+import type { IAppStoreApp } from '../../../constants/AppStoreTypes'
 
 import { mdiTextShort } from '@mdi/js'
 import { translate as t } from '@nextcloud/l10n'
@@ -27,7 +27,7 @@ import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js
 import Markdown from '../../Markdown.vue'
 
 defineProps<{
-	app: IAppstoreApp,
+	app: IAppStoreApp,
 }>()
 </script>
 
