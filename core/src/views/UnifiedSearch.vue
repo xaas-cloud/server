@@ -26,6 +26,7 @@
 <script lang="ts">
 import { emit, subscribe } from '@nextcloud/event-bus'
 import { translate } from '@nextcloud/l10n'
+import { useIsSmallMobile } from '@nextcloud/vue/dist/Composables/useIsMobile.js'
 import { useBrowserLocation } from '@vueuse/core'
 import { defineComponent } from 'vue'
 
@@ -49,9 +50,11 @@ export default defineComponent({
 
 	setup() {
 		const currentLocation = useBrowserLocation()
+		const isSmallMobile = useIsSmallMobile()
 
 		return {
 			currentLocation,
+			isSmallMobile,
 			t: translate,
 		}
 	},
@@ -80,7 +83,11 @@ export default defineComponent({
 		 */
 		supportsLocalSearch() {
 			// TODO: Make this an API
-			const providerPaths = ['/settings/users', '/apps/deck', '/settings/apps']
+			const providerPaths = ['/settings/users', '/apps/deck']
+			// additional providers which only use the search bar for mobile view
+			if (this.isSmallMobile) {
+				providerPaths.push(...['/settings/apps', '/apps/files'])
+			}
 			return providerPaths.some((path) => this.currentLocation.pathname?.includes?.(path))
 		},
 	},

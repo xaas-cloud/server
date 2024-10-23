@@ -5,52 +5,55 @@
 <template>
 	<!-- Categories & filters -->
 	<NcAppNavigation :aria-label="t('settings', 'Apps')">
+		<template #search>
+			<NcAppNavigationSearch v-model="searchStore.query" />
+		</template>
 		<template #list>
 			<NcAppNavigationItem v-if="appstoreEnabled"
 				id="app-category-discover"
-				:to="{ name: 'apps-category', params: { category: 'discover'} }"
-				:name="APPS_SECTION_ENUM.discover">
+				:to="{ name: 'discover' }"
+				:name="AppStoreSectionNames.discover">
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.discover" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.discover" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem id="app-category-installed"
-				:to="{ name: 'apps-category', params: { category: 'installed'} }"
-				:name="APPS_SECTION_ENUM.installed">
+				:to="{ name: 'app-category', params: { category: 'installed'} }"
+				:name="AppStoreSectionNames.installed">
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.installed" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.installed" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem id="app-category-enabled"
-				:to="{ name: 'apps-category', params: { category: 'enabled' } }"
-				:name="APPS_SECTION_ENUM.enabled">
+				:to="{ name: 'app-category', params: { category: 'enabled' } }"
+				:name="AppStoreSectionNames.enabled">
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.enabled" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.enabled" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem id="app-category-disabled"
-				:to="{ name: 'apps-category', params: { category: 'disabled' } }"
-				:name="APPS_SECTION_ENUM.disabled">
+				:to="{ name: 'app-category', params: { category: 'disabled' } }"
+				:name="AppStoreSectionNames.disabled">
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.disabled" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.disabled" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem v-if="updateCount > 0"
 				id="app-category-updates"
-				:to="{ name: 'apps-category', params: { category: 'updates' } }"
-				:name="APPS_SECTION_ENUM.updates">
+				:to="{ name: 'app-category', params: { category: 'updates' } }"
+				:name="AppStoreSectionNames.updates">
 				<template #counter>
 					<NcCounterBubble>{{ updateCount }}</NcCounterBubble>
 				</template>
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.updates" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.updates" />
 				</template>
 			</NcAppNavigationItem>
 			<NcAppNavigationItem id="app-category-your-bundles"
-				:to="{ name: 'apps-category', params: { category: 'app-bundles' } }"
-				:name="APPS_SECTION_ENUM['app-bundles']">
+				:to="{ name: 'app-category', params: { category: 'app-bundles' } }"
+				:name="AppStoreSectionNames['app-bundles']">
 				<template #icon>
-					<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.bundles" />
+					<NcIconSvgWrapper :path="AppStoreCategoryIcons.bundles" />
 				</template>
 			</NcAppNavigationItem>
 
@@ -63,17 +66,17 @@
 			<template v-else-if="appstoreEnabled && !categoriesLoading">
 				<NcAppNavigationItem v-if="isSubscribed"
 					id="app-category-supported"
-					:to="{ name: 'apps-category', params: { category: 'supported' } }"
-					:name="APPS_SECTION_ENUM.supported">
+					:to="{ name: 'app-category', params: { category: 'supported' } }"
+					:name="AppStoreSectionNames.supported">
 					<template #icon>
-						<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.supported" />
+						<NcIconSvgWrapper :path="AppStoreCategoryIcons.supported" />
 					</template>
 				</NcAppNavigationItem>
 				<NcAppNavigationItem id="app-category-featured"
-					:to="{ name: 'apps-category', params: { category: 'featured' } }"
-					:name="APPS_SECTION_ENUM.featured">
+					:to="{ name: 'app-category', params: { category: 'featured' } }"
+					:name="AppStoreSectionNames.featured">
 					<template #icon>
-						<NcIconSvgWrapper :path="APPSTORE_CATEGORY_ICONS.featured" />
+						<NcIconSvgWrapper :path="AppStoreCategoryIcons.featured" />
 					</template>
 				</NcAppNavigationItem>
 
@@ -82,7 +85,7 @@
 					:key="category.id"
 					:name="category.displayName"
 					:to="{
-						name: 'apps-category',
+						name: 'app-category',
 						params: { category: category.id },
 					}">
 					<template #icon>
@@ -99,26 +102,30 @@
 </template>
 
 <script setup lang="ts">
+import { subscribe } from '@nextcloud/event-bus'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
+import { useIsSmallMobile } from '@nextcloud/vue/dist/Composables/useIsMobile.js'
 import { computed, onBeforeMount } from 'vue'
-import { APPS_SECTION_ENUM } from '../constants/AppsConstants'
-import { useAppsStore } from '../store/apps-store'
+import { useAppStore } from '../../store/appStore'
+import { useAppStoreSearchStore } from '../../store/appStoreSearch'
+import { AppStoreSectionNames } from '../../constants/AppStoreConstants'
 
 import NcAppNavigation from '@nextcloud/vue/dist/Components/NcAppNavigation.js'
 import NcAppNavigationItem from '@nextcloud/vue/dist/Components/NcAppNavigationItem.js'
+import NcAppNavigationSearch from '@nextcloud/vue/dist/Components/NcAppNavigationSearch.js'
 import NcAppNavigationSpacer from '@nextcloud/vue/dist/Components/NcAppNavigationSpacer.js'
 import NcCounterBubble from '@nextcloud/vue/dist/Components/NcCounterBubble.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
-
-import APPSTORE_CATEGORY_ICONS from '../constants/AppstoreCategoryIcons.ts'
+import AppStoreCategoryIcons from '../../constants/AppStoreCategoryIcons'
 
 const updateCount = loadState<number>('settings', 'appstoreUpdateCount', 0)
 const appstoreEnabled = loadState<boolean>('settings', 'appstoreEnabled', true)
 const developerDocsUrl = loadState<string>('settings', 'appstoreDeveloperDocs', '')
 
-const store = useAppsStore()
+const store = useAppStore()
+const searchStore = useAppStoreSearchStore()
 const categories = computed(() => store.categories)
 const categoriesLoading = computed(() => store.loading.categories)
 
@@ -129,9 +136,16 @@ const categoriesLoading = computed(() => store.loading.categories)
  */
 const isSubscribed = computed(() => store.apps.find(({ level }) => level === 300) !== undefined)
 
+const isSmallMobile = useIsSmallMobile()
+// Subscribe to unified search to use the search input for small mobile
+subscribe('nextcloud:unified-search:search', ({ query: text }) => {
+	if (isSmallMobile.value) {
+		searchStore.query = text
+	}
+})
+
 // load categories when component is mounted
 onBeforeMount(() => {
-	store.loadCategories()
 	store.loadApps()
 })
 </script>
