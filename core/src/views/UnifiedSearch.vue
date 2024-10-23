@@ -138,9 +138,9 @@ export default defineComponent({
 			if (event.ctrlKey && event.code === 'KeyF') {
 				// only handle search if not already open - in this case the browser native search should be used
 				if (!this.showLocalSearch && !this.showUnifiedSearch) {
-					this.toggleUnifiedSearch()
 					event.preventDefault()
 				}
+				this.toggleUnifiedSearch()
 			}
 		},
 
@@ -149,9 +149,10 @@ export default defineComponent({
 		 */
 		toggleUnifiedSearch() {
 			if (this.supportsLocalSearch) {
-				this.showLocalSearch = true
+				this.showLocalSearch = !this.showLocalSearch
 			} else {
-				this.openModal()
+				this.showUnifiedSearch = !this.showUnifiedSearch
+				this.showLocalSearch = false
 			}
 		},
 
