@@ -267,10 +267,6 @@ class AppSettingsController extends Controller {
 		}
 	}
 
-	private function getAllApps() {
-		return $this->allApps;
-	}
-
 	/**
 	 * Get all available apps in a category
 	 *
@@ -279,7 +275,7 @@ class AppSettingsController extends Controller {
 	 */
 	public function listApps(): JSONResponse {
 		$this->fetchApps();
-		$apps = $this->getAllApps();
+		$apps = $this->allApps;
 
 		$dependencyAnalyzer = new DependencyAnalyzer(new Platform($this->config), $this->l10n);
 
@@ -309,7 +305,6 @@ class AppSettingsController extends Controller {
 				$groups = json_decode($appData['groups']);
 			}
 			$appData['groups'] = $groups;
-			$appData['canUnInstall'] = !$appData['active'] && $appData['removable'];
 
 			// fix licence vs license
 			if (isset($appData['license']) && !isset($appData['licence'])) {
@@ -318,14 +313,11 @@ class AppSettingsController extends Controller {
 
 			$ignoreMax = in_array($appData['id'], $ignoreMaxApps);
 
-			// analyse dependencies
+			// analyze dependencies
 			$missing = $dependencyAnalyzer->analyze($appData, $ignoreMax);
-			$appData['canInstall'] = empty($missing);
 			$appData['missingDependencies'] = $missing;
-
-			$appData['missingMinOwnCloudVersion'] = !isset($appData['dependencies']['nextcloud']['@attributes']['min-version']);
-			$appData['missingMaxOwnCloudVersion'] = !isset($appData['dependencies']['nextcloud']['@attributes']['max-version']);
 			$appData['isCompatible'] = $dependencyAnalyzer->isMarkedCompatible($appData);
+			$appData['isForceEnabled'] = $ignoreMax;
 
 			return $appData;
 		}, $apps);
@@ -421,7 +413,6 @@ class AppSettingsController extends Controller {
 				'author' => $authors,
 				'shipped' => $this->appManager->isShipped($app['id']),
 				'version' => $currentVersion,
-				'default_enable' => '',
 				'types' => [],
 				'documentation' => [
 					'admin' => $app['adminDocs'],
@@ -430,15 +421,11 @@ class AppSettingsController extends Controller {
 				],
 				'website' => $app['website'],
 				'bugs' => $app['issueTracker'],
-				'detailpage' => $app['website'],
 				'dependencies' => array_merge(
 					$nextCloudVersionDependencies,
 					$phpDependencies
 				),
 				'level' => ($app['isFeatured'] === true) ? 200 : 100,
-				'missingMaxOwnCloudVersion' => false,
-				'missingMinOwnCloudVersion' => false,
-				'canInstall' => true,
 				'screenshot' => isset($app['screenshots'][0]['url']) ? 'https://usercontent.apps.nextcloud.com/' . base64_encode($app['screenshots'][0]['url']) : '',
 				'score' => $app['ratingOverall'],
 				'ratingRecent' => $app['ratingRecent'],
@@ -447,7 +434,6 @@ class AppSettingsController extends Controller {
 				'active' => $this->appManager->isEnabledForUser($app['id']),
 				'needsDownload' => !$existsLocally,
 				'groups' => $groups,
-				'fromAppStore' => true,
 				'appstoreData' => $app,
 			];
 		}
