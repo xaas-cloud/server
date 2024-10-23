@@ -55,7 +55,7 @@
 </template>
 
 <script lang="ts">
-import type { IAppDiscoverPost } from '../../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverPost } from '../../../constants/AppStoreDiscoverTypes'
 import type { PropType } from 'vue'
 
 import { mdiPlayCircleOutline } from '@mdi/js'
@@ -193,7 +193,7 @@ export default defineComponent({
 	max-height: 300px;
 	width: 100%;
 	background-color: var(--color-primary-element-light);
-	border-radius: var(--border-radius-rounded);
+	border-radius: var(--border-radius-container-large);
 
 	display: flex;
 	flex-direction: row;
@@ -212,7 +212,7 @@ export default defineComponent({
 	&__text {
 		display: block;
 		width: 100%;
-		padding: var(--border-radius-rounded);
+		padding: calc(3 * var(--default-grid-baseline));
 		overflow-y: scroll;
 	}
 
@@ -226,7 +226,7 @@ export default defineComponent({
 		overflow: hidden;
 
 		max-width: 450px;
-		border-radius: var(--border-radius-rounded);
+		border-radius: var(--border-radius-container-large);
 
 		&--fullwidth {
 			max-width: unset;
@@ -283,13 +283,13 @@ export default defineComponent({
 			min-width: 100%;
 
 			&--end {
-				border-radius: var(--border-radius-rounded);
+				border-radius: var(--border-radius-container);
 				border-start-end-radius: 0;
 				border-start-start-radius: 0;
 			}
 
 			&--start {
-				border-radius: var(--border-radius-rounded);
+				border-radius: var(--border-radius-container);
 				border-end-end-radius: 0;
 				border-end-start-radius: 0;
 			}

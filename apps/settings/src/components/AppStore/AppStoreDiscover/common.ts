@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 import type { PropType } from 'vue'
-import type { IAppDiscoverElement } from '../../../constants/AppDiscoverTypes.ts'
-
-import { APP_DISCOVER_KNOWN_TYPES } from '../../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverElement } from '../../../constants/AppStoreDiscoverTypes'
+import { APP_DISCOVER_KNOWN_TYPES } from '../../../constants/AppStoreDiscoverTypes'
 
 /**
  * Common Props for all app discover types

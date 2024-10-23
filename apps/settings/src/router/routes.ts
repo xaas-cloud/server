@@ -8,9 +8,11 @@ import { loadState } from '@nextcloud/initial-state'
 const appstoreEnabled = loadState<boolean>('settings', 'appstoreEnabled', true)
 
 // Dynamic loading
-const AppStore = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStore.vue')
-const AppStoreNavigation = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStoreNavigation.vue')
-const AppStoreSidebar = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStoreSidebar.vue')
+const AppStore = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStore/AppStore.vue')
+const AppStoreAppsSection = () => import(/* webpackChunkName: 'settings-apps-view' */ '../views/AppStore/AppStoreSectionApps.vue')
+const AppStoreDiscoverSection = () => import(/* webpackChunkName: 'settings-apps-view' */ '../views/AppStore/AppStoreSectionDiscover.vue')
+const AppStoreNavigation = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStore/AppStoreNavigation.vue')
+const AppStoreSidebar = () => import(/* webpackChunkName: 'settings-apps-view' */'../views/AppStore/AppStoreSidebar.vue')
 
 const UserManagement = () => import(/* webpackChunkName: 'settings-users' */'../views/UserManagement.vue')
 const UserManagementNavigation = () => import(/* webpackChunkName: 'settings-users' */'../views/UserManagementNavigation.vue')
@@ -35,10 +37,15 @@ const routes: RouteConfig[] = [
 		path: '/:index(index.php/)?settings/apps',
 		name: 'apps',
 		redirect: {
-			name: 'apps-category',
-			params: {
-				category: appstoreEnabled ? 'discover' : 'installed',
-			},
+			...(appstoreEnabled
+				? { name: 'discover' }
+				: {
+					name: 'apps-category',
+					params: {
+						category: 'installed',
+					},
+				}
+			),
 		},
 		components: {
 			default: AppStore,
@@ -47,12 +54,18 @@ const routes: RouteConfig[] = [
 		},
 		children: [
 			{
+				name: 'discover',
+				path: 'discover/:appId?',
+				component: AppStoreDiscoverSection,
+			},
+			{
 				path: ':category',
-				name: 'apps-category',
+				name: 'app-category',
+				component: AppStoreAppsSection,
 				children: [
 					{
-						path: ':id',
-						name: 'apps-details',
+						path: ':appId',
+						name: 'app-details',
 					},
 				],
 			},

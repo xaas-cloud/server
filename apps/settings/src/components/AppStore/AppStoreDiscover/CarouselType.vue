@@ -61,7 +61,7 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { IAppDiscoverCarousel } from '../../../constants/AppDiscoverTypes.ts'
+import type { IAppDiscoverCarousel } from '../../../constants/AppStoreDiscoverTypes.ts'
 
 import { mdiChevronLeft, mdiChevronRight, mdiCircleOutline, mdiCircleSlice8 } from '@mdi/js'
 import { translate as t } from '@nextcloud/l10n'

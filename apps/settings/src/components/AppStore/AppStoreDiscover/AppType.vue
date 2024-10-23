@@ -24,10 +24,10 @@
 </template>
 
 <script setup lang="ts">
-import type { IAppDiscoverApp } from '../../../constants/AppDiscoverTypes'
+import type { IAppDiscoverApp } from '../../../constants/AppStoreDiscoverTypes.ts'
 
 import { computed } from 'vue'
-import { useAppsStore } from '../../../store/apps-store.ts'
+import { useAppStore } from '../../../store/appStore.ts'
 
 import AppItem from '../AppItem/AppItem.vue'
 
@@ -35,7 +35,7 @@ const props = defineProps<{
 	modelValue: IAppDiscoverApp
 }>()
 
-const store = useAppsStore()
+const store = useAppStore()
 const app = computed(() => store.getAppById(props.modelValue.appId))
 
 const appStoreLink = computed(() => props.modelValue.appId ? `https://apps.nextcloud.com/apps/${props.modelValue.appId}` : '#')
@@ -47,7 +47,7 @@ const appStoreLink = computed(() => props.modelValue.appId ? `https://apps.nextc
 
 	&:hover {
 		background: var(--color-background-hover);
-		border-radius: var(--border-radius-rounded);
+		border-radius: var(--border-radius-container);
 	}
 
 	&__skeleton {
