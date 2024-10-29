@@ -38,7 +38,7 @@ import debounce from 'debounce'
 import TrayArrowDownIcon from 'vue-material-design-icons/TrayArrowDown.vue'
 
 import { useNavigation } from '../composables/useNavigation'
-import { dataTransferToFileTree, onDropExternalFiles } from '../services/DropService'
+import { onDropExternalFiles } from '../services/DropService'
 import logger from '../logger.ts'
 import type { RawLocation } from 'vue-router'
 
@@ -168,38 +168,24 @@ export default defineComponent({
 			event.preventDefault()
 			event.stopPropagation()
 
-			// Caching the selection
-			const items: DataTransferItem[] = [...event.dataTransfer?.items || []]
-
-			// We need to process the dataTransfer ASAP before the
-			// browser clears it. This is why we cache the items too.
-			const fileTree = await dataTransferToFileTree(items)
-
-			// We might not have the target directory fetched yet
-			const contents = await this.currentView?.getContents(this.currentFolder.path)
-			const folder = contents?.folder
-			if (!folder) {
-				showError(this.t('files', 'Target folder does not exist any more'))
-				return
-			}
-
 			// If another button is pressed, cancel it. This
 			// allows cancelling the drag with the right click.
 			if (event.button) {
 				return
 			}
 
-			logger.debug('Dropped', { event, folder, fileTree })
+			logger.debug('Dropped', { event })
 
-			// Check whether we're uploading files
-			const uploads = await onDropExternalFiles(fileTree, folder, contents.contents)
+			// Caching the selection
+			const items: DataTransferItem[] = [...event.dataTransfer?.items || []]
+			const uploads = await onDropExternalFiles(items)
 
 			// Scroll to last successful upload in current directory if terminated
 			const lastUpload = uploads.findLast((upload) => upload.status !== UploadStatus.FAILED
 				&& !upload.file.webkitRelativePath.includes('/')
 				&& upload.response?.headers?.['oc-fileid']
 				// Only use the last ID if it's in the current folder
-				&& upload.source.replace(folder.source, '').split('/').length === 2)
+				&& upload.source.replace(this.currentFolder.source, '').split('/').length === 2)
 
 			if (lastUpload !== undefined) {
 				logger.debug('Scrolling to last upload in current folder', { lastUpload })

@@ -47,7 +47,7 @@ import NcBreadcrumbs from '@nextcloud/vue/dist/Components/NcBreadcrumbs.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 
 import { useNavigation } from '../composables/useNavigation'
-import { onDropInternalFiles, dataTransferToFileTree, onDropExternalFiles } from '../services/DropService'
+import { onDropInternalFiles, onDropExternalFiles } from '../services/DropService'
 import { showError } from '@nextcloud/dialogs'
 import { useDragAndDropStore } from '../store/dragging.ts'
 import { useFilesStore } from '../store/files.ts'
@@ -222,14 +222,23 @@ export default defineComponent({
 			// dragover state on the DragAndDropNotice component.
 			event.preventDefault()
 
+			// If another button is pressed, cancel it. This
+			// allows cancelling the drag with the right click.
+			if (event.button !== 0) {
+				return
+			}
+
 			// Caching the selection
 			const selection = this.draggingFiles
 			const items = [...event.dataTransfer?.items || []] as DataTransferItem[]
 
-			// We need to process the dataTransfer ASAP before the
-			// browser clears it. This is why we cache the items too.
-			const fileTree = await dataTransferToFileTree(items)
+			// Check if we are uploading files
+			if (items.find((item) => item.kind === 'file') !== undefined) {
+				await onDropExternalFiles(items)
+				return
+			}
 
+			// Else we're moving/copying files
 			// We might not have the target directory fetched yet
 			const contents = await this.currentView?.getContents(path)
 			const folder = contents?.folder
@@ -238,24 +247,13 @@ export default defineComponent({
 				return
 			}
 
-			const canDrop = (folder.permissions & Permission.CREATE) !== 0
+			const canDrop = Boolean(folder.permissions & Permission.CREATE)
+			if (!canDrop) {
+				return
+			}
+
+			logger.debug('Dropped', { event, folder, selection })
 			const isCopy = event.ctrlKey
-
-			// If another button is pressed, cancel it. This
-			// allows cancelling the drag with the right click.
-			if (!canDrop || event.button !== 0) {
-				return
-			}
-
-			logger.debug('Dropped', { event, folder, selection, fileTree })
-
-			// Check whether we're uploading files
-			if (fileTree.contents.length > 0) {
-				await onDropExternalFiles(fileTree, folder, contents.contents)
-				return
-			}
-
-			// Else we're moving/copying files
 			const nodes = selection.map(source => this.filesStore.getNode(source)) as Node[]
 			await onDropInternalFiles(nodes, folder, contents.contents, isCopy)
 

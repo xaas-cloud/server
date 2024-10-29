@@ -5,129 +5,11 @@
 import type { FileStat, ResponseDataDetailed } from 'webdav'
 
 import { emit } from '@nextcloud/event-bus'
-import { Folder, Node, davGetClient, davGetDefaultPropfind, davResultToNode } from '@nextcloud/files'
-import { openConflictPicker } from '@nextcloud/upload'
+import { Folder, Node, davGetClient, davGetDefaultPropfind, davResultToNode, getNavigation, Permission } from '@nextcloud/files'
+import { getConflicts, openConflictPicker, type IDirectory } from '@nextcloud/upload'
 import { showError, showInfo } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-
 import logger from '../logger.ts'
-
-/**
- * This represents a Directory in the file tree
- * We extend the File class to better handling uploading
- * and stay as close as possible as the Filesystem API.
- * This also allow us to hijack the size or lastModified
- * properties to compute them dynamically.
- */
-export class Directory extends File {
-
-	/* eslint-disable no-use-before-define */
-	_contents: (Directory|File)[]
-
-	constructor(name, contents: (Directory|File)[] = []) {
-		super([], name, { type: 'httpd/unix-directory' })
-		this._contents = contents
-	}
-
-	set contents(contents: (Directory|File)[]) {
-		this._contents = contents
-	}
-
-	get contents(): (Directory|File)[] {
-		return this._contents
-	}
-
-	get size() {
-		return this._computeDirectorySize(this)
-	}
-
-	get lastModified() {
-		if (this._contents.length === 0) {
-			return Date.now()
-		}
-		return this._computeDirectoryMtime(this)
-	}
-
-	/**
-	 * Get the last modification time of a file tree
-	 * This is not perfect, but will get us a pretty good approximation
-	 * @param directory the directory to traverse
-	 */
-	_computeDirectoryMtime(directory: Directory): number {
-		return directory.contents.reduce((acc, file) => {
-			return file.lastModified > acc
-				// If the file is a directory, the lastModified will
-				// also return the results of its _computeDirectoryMtime method
-				// Fancy recursion, huh?
-				? file.lastModified
-				: acc
-		}, 0)
-	}
-
-	/**
-	 * Get the size of a file tree
-	 * @param directory the directory to traverse
-	 */
-	_computeDirectorySize(directory: Directory): number {
-		return directory.contents.reduce((acc: number, entry: Directory|File) => {
-			// If the file is a directory, the size will
-			// also return the results of its _computeDirectorySize method
-			// Fancy recursion, huh?
-			return acc + entry.size
-		}, 0)
-	}
-
-}
-
-export type RootDirectory = Directory & {
-	name: 'root'
-}
-
-/**
- * Traverse a file tree using the Filesystem API
- * @param entry the entry to traverse
- */
-export const traverseTree = async (entry: FileSystemEntry): Promise<Directory|File> => {
-	// Handle file
-	if (entry.isFile) {
-		return new Promise<File>((resolve, reject) => {
-			(entry as FileSystemFileEntry).file(resolve, reject)
-		})
-	}
-
-	// Handle directory
-	logger.debug('Handling recursive file tree', { entry: entry.name })
-	const directory = entry as FileSystemDirectoryEntry
-	const entries = await readDirectory(directory)
-	const contents = (await Promise.all(entries.map(traverseTree))).flat()
-	return new Directory(directory.name, contents)
-}
-
-/**
- * Read a directory using Filesystem API
- * @param directory the directory to read
- */
-const readDirectory = (directory: FileSystemDirectoryEntry): Promise<FileSystemEntry[]> => {
-	const dirReader = directory.createReader()
-
-	return new Promise<FileSystemEntry[]>((resolve, reject) => {
-		const entries = [] as FileSystemEntry[]
-		const getEntries = () => {
-			dirReader.readEntries((results) => {
-				if (results.length) {
-					entries.push(...results)
-					getEntries()
-				} else {
-					resolve(entries)
-				}
-			}, (error) => {
-				reject(error)
-			})
-		}
-
-		getEntries()
-	})
-}
 
 export const createDirectoryIfNotExists = async (absolutePath: string) => {
 	const davClient = davGetClient()
@@ -140,20 +22,51 @@ export const createDirectoryIfNotExists = async (absolutePath: string) => {
 	}
 }
 
-export const resolveConflict = async <T extends ((Directory|File)|Node)>(files: Array<T>, destination: Folder, contents: Node[]): Promise<T[]> => {
+/**
+ * Helper function to resolve conflicts when using batchUpload from `@nextcloud/upload`
+ * @param files Files that are going to be uploaded
+ * @param currentPath The path where the files are uploaded to
+ */
+export async function resolveUploadConflicts(files: Array<IDirectory|File>, currentPath: string): Promise<Array<IDirectory|File>> {
+	const view = getNavigation().active!
 	try {
-		// List all conflicting files
-		const conflicts = files.filter((file: File|Node) => {
-			return contents.find((node: Node) => node.basename === (file instanceof File ? file.name : file.basename))
-		}).filter(Boolean) as (File|Node)[]
+		const { contents, folder } = await view.getContents(currentPath)
+		return await resolveConflict(files, folder, contents)
+	} catch (error) {
+		// If the folder does not exist then we can upload everything
+		logger.debug('Could not fetch folder with contents.', { error, currentPath })
+	}
+	return files
+}
+
+/**
+ * Resolve conflicts on dropping files
+ * @param files Files to be uploaded
+ * @param destination The current folder to upload to
+ * @param contents The content of the folder
+ */
+export async function resolveConflict<T extends((IDirectory|File)|Node)>(files: Array<T>, destination: Folder, contents: Node[]): Promise<T[]> {
+	// No permissions
+	if (!(destination.permissions & Permission.CREATE)) {
+		return []
+	}
+
+	try {
+		const conflicts = getConflicts(files, contents)
+		// No conflicts thus upload all
+		if (conflicts.length === 0) {
+			return files
+		}
 
 		// List of incoming files that are NOT in conflict
 		const uploads = files.filter((file: File|Node) => {
-			return !conflicts.includes(file)
+			return !(conflicts as unknown[]).includes(file)
 		})
 
+		logger.debug('Starting conflict resolution', { path: destination.path, conflicts, contents })
+
 		// Let the user choose what to do with the conflicting files
-		const { selected, renamed } = await openConflictPicker(destination.path, conflicts, contents)
+		const { selected, renamed } = await openConflictPicker(destination.path, conflicts, contents, { recursive: true })
 
 		logger.debug('Conflict resolution', { uploads, selected, renamed })
 
@@ -168,10 +81,9 @@ export const resolveConflict = async <T extends ((Directory|File)|Node)>(files: 
 		// Update the list of files to upload
 		return [...uploads, ...selected, ...renamed] as (typeof files)
 	} catch (error) {
-		console.error(error)
+		logger.error('User cancelled the upload', { error })
 		// User cancelled
 		showError(t('files', 'Upload cancelled'))
-		logger.error('User cancelled the upload')
 	}
 
 	return []
