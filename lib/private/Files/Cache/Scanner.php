@@ -133,6 +133,10 @@ class Scanner extends BasicEmitter implements IScanner {
 
 			try {
 				$data = $data ?? $this->getData($file);
+				if (!isset($data['mimetype'])) {
+					$logger = \OC::$server->get(LoggerInterface::class);
+					$logger->error("invalid data in scanner. path: $file, storage: " . $this->storage->getId() . ', data: ' . json_encode($data));
+				}
 			} catch (ForbiddenException $e) {
 				if ($lock) {
 					if ($this->storage->instanceOfStorage(ILockingStorage::class)) {
