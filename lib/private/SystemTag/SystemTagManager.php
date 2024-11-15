@@ -187,7 +187,7 @@ class SystemTagManager implements ISystemTagManager {
 		string $newName,
 		bool $userVisible,
 		bool $userAssignable,
-		string $color = ''
+		string $color,
 	): void {
 		try {
 			$tags = $this->getTagsByIds($tagId);

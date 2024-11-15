@@ -17,7 +17,7 @@ class SystemTag implements ISystemTag {
 		private bool $userVisible,
 		private bool $userAssignable,
 		private ?string $etag = null,
-		private ?string $color = null
+		private ?string $color = null,
 	) {
 	}
 
