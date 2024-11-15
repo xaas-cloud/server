@@ -15,7 +15,7 @@ import { formatTag, parseIdFromLocation, parseTags } from '../utils'
 import { logger } from '../logger.js'
 
 export const fetchTagsPayload = `<?xml version="1.0"?>
-<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+<d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
 	<d:prop>
 		<oc:id />
 		<oc:display-name />
@@ -23,6 +23,7 @@ export const fetchTagsPayload = `<?xml version="1.0"?>
 		<oc:user-assignable />
 		<oc:can-assign />
 		<d:getetag />
+		<nc:color />
 	</d:prop>
 </d:propfind>`
 
@@ -98,12 +99,13 @@ export const createTag = async (tag: Tag | ServerTag): Promise<number> => {
 export const updateTag = async (tag: TagWithId): Promise<void> => {
 	const path = '/systemtags/' + tag.id
 	const data = `<?xml version="1.0"?>
-	<d:propertyupdate xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
+	<d:propertyupdate xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns" xmlns:nc="http://nextcloud.org/ns">
 		<d:set>
 			<d:prop>
 				<oc:display-name>${tag.displayName}</oc:display-name>
 				<oc:user-visible>${tag.userVisible}</oc:user-visible>
 				<oc:user-assignable>${tag.userAssignable}</oc:user-assignable>
+				<nc:color>${tag.color}</nc:color>
 			</d:prop>
 		</d:set>
 	</d:propertyupdate>`
