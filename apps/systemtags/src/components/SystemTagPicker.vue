@@ -142,7 +142,7 @@ import PencilIcon from 'vue-material-design-icons/Pencil.vue'
 import PlusIcon from 'vue-material-design-icons/Plus.vue'
 import TagIcon from 'vue-material-design-icons/Tag.vue'
 
-import { createTag, fetchTag, fetchTags, getTagObjects, setTagObjects, updateTag, updateTagColor } from '../services/api'
+import { createTag, fetchTag, fetchTags, getTagObjects, setTagObjects, updateTag } from '../services/api'
 import { getNodeSystemTags, setNodeSystemTags } from '../utils'
 import { elementColor, invertTextColor, isDarkModeEnabled } from '../utils/colorUtils'
 import logger from '../services/logger'
