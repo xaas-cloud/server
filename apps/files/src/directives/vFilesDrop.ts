@@ -8,6 +8,7 @@ import {
 } from '../services/DropService'
 import { useDragAndDropStore } from '../store/dragging'
 import { useFilesStore } from '../store/files'
+import logger from '../logger'
 
 interface OnFileDropProperties {
 	disabled?: boolean,
@@ -25,16 +26,26 @@ interface OnFileDropProperties {
  * @param bindings.modifiers Modifiers used on the component - e.g. ".stop"
  * @param bindings.value The value passed through the component
  */
-const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties> = function(
+const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties | (() => Promise<OnFileDropProperties>)> = function(
 	el,
 	{
 		modifiers,
-		value: options,
+		value,
 	},
 ) {
 	// We need to use `ondrop` instead of addEventListener as we have no reference to previous
 	// event listener to remove it from the component
 	el.ondrop = async (event: DragEvent) => {
+		const options = typeof value === 'function' ? await value() : value
+
+		logger.debug('Start handling drop', { options })
+
+		// Skip any drop handling if disabled
+		if (options.disabled) {
+			logger.info('Drop is disabled', { event })
+			return
+		}
+
 		// Stop the event if called with "v-on-file-drop.stop"
 		if (modifiers.stop) {
 			event.stopPropagation()
@@ -43,8 +54,8 @@ const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties>
 		if (modifiers.prevent) {
 			event.preventDefault()
 		}
-		// Skip any drop handling if disabled or aborted (right click)
-		if (options.disabled || event.button > 0) {
+		// Skip handling if event was aborted by the user (clicking somewhere)
+		if (event.button > 0) {
 			return options.callback?.([])
 		}
 
