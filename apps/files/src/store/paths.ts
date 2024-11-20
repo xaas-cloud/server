@@ -67,6 +67,15 @@ export const usePathsStore = function(...args) {
 					})
 				}
 
+				if (node.type === FileType.Folder && node.path === '/') {
+					const root = files.getRoot(service)
+					if (root === undefined) {
+						Vue.set(node, '_children', files.getNodesByPath(service, '/'))
+						files.setRoot({ service, root: node as Folder })
+					}
+					return
+				}
+
 				// Update parent folder children if exists
 				// If the folder is the root, get it and update it
 				this.addNodeToParentChildren(node)
