@@ -74,7 +74,7 @@ export default defineComponent({
 
 	computed: {
 		isActive() {
-			return this.activeStore.active?.source === this.source.source
+			return this.activeStore.activeNode?.source === this.source.source
 		},
 
 		selectedFiles() {

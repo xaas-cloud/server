@@ -4,16 +4,20 @@
  */
 
 import type { ActiveStore } from '../types.ts'
-import type { Node } from '@nextcloud/files'
+import type { Node, View } from '@nextcloud/files'
 
 import { defineStore } from 'pinia'
+import { getNavigation } from '@nextcloud/files'
 import { subscribe } from '@nextcloud/event-bus'
+
 import logger from '../logger.ts'
 
 export const useActiveStore = function(...args) {
 	const store = defineStore('active', {
 		state: () => ({
-			active: null,
+			_initialized: false,
+			activeNode: null,
+			activeView: null,
 		} as ActiveStore),
 
 		actions: {
@@ -22,32 +26,43 @@ export const useActiveStore = function(...args) {
 					throw new Error('Use clearActiveNode to clear the active node')
 				}
 				logger.debug('Setting active node', { node })
-				this.active = node
+				this.activeNode = node
 			},
 
 			/**
 			 * Clear the active node
 			 */
 			clearActiveNode() {
-				this.active = null
+				this.activeNode = null
 			},
 
 			onDeletedNode(node: Node) {
-				if (this.active && this.active.source === node.source) {
+				if (this.activeNode && this.activeNode.source === node.source) {
 					this.clearActiveNode()
 				}
+			},
+
+			onChangedView(view: View|null = null) {
+				logger.debug('Setting active view', { view })
+				this.activeView = view
+				this.clearActiveNode()
 			},
 		},
 	})
 
 	const activeStore = store(...args)
+	const navigation = getNavigation()
 
 	// Make sure we only register the listeners once
 	if (!activeStore._initialized) {
 		subscribe('files:node:deleted', activeStore.onDeletedNode)
-		subscribe('files:navigation:changed', activeStore.clearActiveNode)
 
 		activeStore._initialized = true
+
+		// Or you can react to changes of the current active view
+		navigation.addEventListener('updateActive', (event) => {
+			activeStore.onChangedView(event.detail)
+		})
 	}
 
 	return activeStore

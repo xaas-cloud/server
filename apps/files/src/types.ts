@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
-import type { Folder, Node } from '@nextcloud/files'
+import type { Folder, Node, View } from '@nextcloud/files'
 import type { Upload } from '@nextcloud/upload'
 
 // Global definitions
@@ -97,7 +97,9 @@ export interface DragAndDropStore {
 
 // Active node store
 export interface ActiveStore {
-	active: Node|null
+	_initialized: boolean
+	activeNode: Node|null
+	activeView: View|null
 }
 
 export interface TemplateFile {
