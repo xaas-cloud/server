@@ -8,11 +8,12 @@ import { PiniaVuePlugin } from 'pinia'
 import Vue from 'vue'
 
 import { pinia } from './store/index.ts'
+import { registerHotkeys } from './services/HotKeysService.ts'
+import FilesApp from './FilesApp.vue'
 import router from './router/router'
 import RouterService from './services/RouterService'
 import SettingsModel from './models/Setting.js'
 import SettingsService from './services/Settings.js'
-import FilesApp from './FilesApp.vue'
 
 __webpack_nonce__ = getCSPNonce()
 
@@ -37,6 +38,9 @@ if (!window.OCP.Files.Router) {
 
 // Init Pinia store
 Vue.use(PiniaVuePlugin)
+
+// Init HotKeys AFTER pinia is set up
+registerHotkeys()
 
 // Init Navigation Service
 // This only works with Vue 2 - with Vue 3 this will not modify the source but return just a observer

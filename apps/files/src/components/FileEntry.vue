@@ -46,7 +46,6 @@
 		<FileEntryActions v-show="!isRenamingSmallScreen"
 			ref="actions"
 			:class="`files-list__row-actions-${uniqueId}`"
-			:loading.sync="loading"
 			:opened.sync="openedMenu"
 			:source="source" />
 

@@ -4,7 +4,7 @@
  */
 
 import type { ActiveStore } from '../types.ts'
-import type { Node, View } from '@nextcloud/files'
+import type { FileAction, Node, View } from '@nextcloud/files'
 
 import { defineStore } from 'pinia'
 import { getNavigation } from '@nextcloud/files'
@@ -18,6 +18,7 @@ export const useActiveStore = function(...args) {
 			_initialized: false,
 			activeNode: null,
 			activeView: null,
+			activeAction: null,
 		} as ActiveStore),
 
 		actions: {
@@ -29,11 +30,16 @@ export const useActiveStore = function(...args) {
 				this.activeNode = node
 			},
 
-			/**
-			 * Clear the active node
-			 */
 			clearActiveNode() {
 				this.activeNode = null
+			},
+
+			setActiveAction(action: FileAction) {
+				this.activeAction = action
+			},
+
+			clearActiveAction() {
+				this.activeAction = null
 			},
 
 			onDeletedNode(node: Node) {
@@ -58,6 +64,7 @@ export const useActiveStore = function(...args) {
 		subscribe('files:node:deleted', activeStore.onDeletedNode)
 
 		activeStore._initialized = true
+		activeStore.onChangedView(navigation.active)
 
 		// Or you can react to changes of the current active view
 		navigation.addEventListener('updateActive', (event) => {

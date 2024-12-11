@@ -87,8 +87,8 @@ export const action = new FileAction({
 
 		// Map each node to a promise that resolves with the result of exec(node)
 		const promises = nodes.map(node => {
-		    // Create a promise that resolves with the result of exec(node)
-		    const promise = new Promise<boolean>(resolve => {
+			// Create a promise that resolves with the result of exec(node)
+			const promise = new Promise<boolean>(resolve => {
 				queue.add(async () => {
 					try {
 						await deleteNode(node)

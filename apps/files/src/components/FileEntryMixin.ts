@@ -59,7 +59,6 @@ export default defineComponent({
 
 	data() {
 		return {
-			loading: '',
 			dragover: false,
 			gridMode: false,
 		}
@@ -75,7 +74,7 @@ export default defineComponent({
 		},
 
 		isLoading() {
-			return this.source.status === NodeStatus.LOADING || this.loading !== ''
+			return this.source.status === NodeStatus.LOADING
 		},
 
 		/**
@@ -261,9 +260,6 @@ export default defineComponent({
 
 	methods: {
 		resetState() {
-			// Reset loading state
-			this.loading = ''
-
 			// Reset the preview state
 			this.$refs?.preview?.reset?.()
 

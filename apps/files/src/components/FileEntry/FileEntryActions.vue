@@ -39,7 +39,7 @@
 				:title="action.title?.([source], currentView)"
 				@click="onActionClick(action)">
 				<template #icon>
-					<NcLoadingIcon v-if="loading === action.id" :size="18" />
+					<NcLoadingIcon v-if="isLoadingAction(action)" :size="18" />
 					<NcIconSvgWrapper v-else :svg="action.iconSvgInline([source], currentView)" />
 				</template>
 				{{ mountType === 'shared' && action.id === 'sharing-status' ? '' : actionDisplayName(action) }}
@@ -66,7 +66,7 @@
 					:title="action.title?.([source], currentView)"
 					@click="onActionClick(action)">
 					<template #icon>
-						<NcLoadingIcon v-if="loading === action.id" :size="18" />
+						<NcLoadingIcon v-if="isLoadingAction(action)" :size="18" />
 						<NcIconSvgWrapper v-else :svg="action.iconSvgInline([source], currentView)" />
 					</template>
 					{{ actionDisplayName(action) }}
@@ -82,7 +82,6 @@ import type { FileAction, Node } from '@nextcloud/files'
 
 import { DefaultType, NodeStatus } from '@nextcloud/files'
 import { defineComponent, inject } from 'vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 
 import { useHotKey } from '@nextcloud/vue/dist/Composables/useHotKey.js'
@@ -94,10 +93,7 @@ import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import NcLoadingIcon from '@nextcloud/vue/dist/Components/NcLoadingIcon.js'
 
-import { ACTION_DELETE } from '../../actions/deleteAction.ts'
-import { ACTION_DETAILS } from '../../actions/sidebarAction.ts'
-import { ACTION_FAVORITE } from '../../actions/favoriteAction.ts'
-import { ACTION_RENAME } from '../../actions/renameAction.ts'
+import { executeAction } from '../../utils/actionUtils.ts'
 import { useActiveStore } from '../../store/active.ts'
 import { useFileListWidth } from '../../composables/useFileListWidth.ts'
 import { useNavigation } from '../../composables/useNavigation'
@@ -118,10 +114,6 @@ export default defineComponent({
 	},
 
 	props: {
-		loading: {
-			type: String,
-			required: true,
-		},
 		opened: {
 			type: Boolean,
 			default: false,
@@ -162,7 +154,7 @@ export default defineComponent({
 
 	computed: {
 		isActive() {
-			return this.activeStore.activeNode?.source === this.source.source
+			return this.activeStore?.activeNode?.source === this.source.source
 		},
 
 		isLoading() {
@@ -262,26 +254,6 @@ export default defineComponent({
 			stop: true,
 			prevent: true,
 		})
-
-		useHotKey('d', this.onKeyDown, {
-			stop: true,
-			prevent: true,
-		})
-
-		useHotKey('F2', this.onKeyDown, {
-			stop: true,
-			prevent: true,
-		})
-
-		useHotKey('Delete', this.onKeyDown, {
-			stop: true,
-			prevent: true,
-		})
-
-		useHotKey('s', this.onKeyDown, {
-			stop: true,
-			prevent: true,
-		})
 	},
 
 	methods: {
@@ -301,57 +273,29 @@ export default defineComponent({
 			}
 		},
 
-		async onActionClick(action, isSubmenu = false) {
-			// Skip click on loading
-			if (this.isLoading || this.loading !== '') {
-				return
+		isLoadingAction(action: FileAction) {
+			if (!this.isActive) {
+				return false
 			}
+			return this.activeStore?.activeAction?.id === action.id
+		},
 
+		async onActionClick(action, isSubmenu = false) {
 			// If the action is a submenu, we open it
 			if (this.enabledSubmenuActions[action.id]) {
 				this.openedSubmenu = action
 				return
 			}
 
-			let displayName = action.id
-			try {
-				displayName = action.displayName([this.source], this.currentView)
-			} catch (error) {
-				logger.error('Error while getting action display name', { action, error })
-			}
+			// Make sure we set the node as active
+			this.activeStore.setActiveNode(this.source)
 
-			// store the source in case it gets removed from the virtual scroller
-			// before the action is done executing.
-			const source = this.source
-			try {
-				// Set the loading marker
-				this.$emit('update:loading', action.id)
-				this.$set(source, 'status', NodeStatus.LOADING)
+			// Execute the action
+			await executeAction(action)
 
-				const success = await action.exec(source, this.currentView, this.currentDir)
-
-				// If the action returns null, we stay silent
-				if (success === null || success === undefined) {
-					return
-				}
-
-				if (success) {
-					showSuccess(t('files', '"{displayName}" action executed successfully', { displayName }))
-					return
-				}
-				showError(t('files', '"{displayName}" action failed', { displayName }))
-			} catch (error) {
-				logger.error('Error while executing action', { action, error })
-				showError(t('files', '"{displayName}" action failed', { displayName }))
-			} finally {
-				// Reset the loading marker
-				this.$emit('update:loading', '')
-				this.$set(source, 'status', undefined)
-
-				// If that was a submenu, we just go back after the action
-				if (isSubmenu) {
-					this.openedSubmenu = null
-				}
+			// If that was a submenu, we just go back after the action
+			if (isSubmenu) {
+				this.openedSubmenu = null
 			}
 		},
 
@@ -389,27 +333,6 @@ export default defineComponent({
 			if (event.key === 'a' && !this.openedMenu) {
 				this.openedMenu = true
 			}
-
-			// d opens the sidebar
-			if (event.key === 'd') {
-				this.onActionClick(this.enabledFileActions.find(action => action.id === ACTION_DETAILS)!)
-			}
-
-			// F2 renames the file
-			if (event.key === 'F2') {
-				this.onActionClick(this.enabledFileActions.find(action => action.id === ACTION_RENAME)!)
-			}
-
-			// Delete key deletes the file with confirmation
-			if (event.key === 'Delete') {
-				this.onActionClick(this.enabledFileActions.find(action => action.id === ACTION_DELETE)!)
-			}
-
-			// s toggle favorite
-			if (event.key === 's') {
-				this.onActionClick(this.enabledFileActions.find(action => action.id === ACTION_FAVORITE)!)
-			}
-
 		},
 	},
 })
