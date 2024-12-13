@@ -90,7 +90,7 @@
 			<h3>{{ t('files', 'Actions') }}</h3>
 			<dl>
 				<div>
-					<dt><kbd>A</kbd></dt>
+					<dt><kbd>a</kbd></dt>
 					<dd class="shortcut-description">
 						{{ t('files', 'Open the actions menu for a file') }}
 					</dd>
@@ -108,9 +108,15 @@
 					</dd>
 				</div>
 				<div>
-					<dt><kbd>S</kbd></dt>
+					<dt><kbd>s</kbd></dt>
 					<dd class="shortcut-description">
 						{{ t('files', 'Favorite or remove a file from favorites') }}
+					</dd>
+				</div>
+				<div>
+					<dt><kbd>t</kbd></dt>
+					<dd class="shortcut-description">
+						{{ t('files', 'Manage tags for a file') }}
 					</dd>
 				</div>
 			</dl>

@@ -11,6 +11,7 @@ import { getNavigation } from '@nextcloud/files'
 import { subscribe } from '@nextcloud/event-bus'
 
 import logger from '../logger.ts'
+import type { set } from 'lodash'
 
 export const useActiveStore = function(...args) {
 	const store = defineStore('active', {
@@ -34,18 +35,18 @@ export const useActiveStore = function(...args) {
 				this.activeNode = null
 			},
 
+			onDeletedNode(node: Node) {
+				if (this.activeNode && this.activeNode.source === node.source) {
+					this.clearActiveNode()
+				}
+			},
+
 			setActiveAction(action: FileAction) {
 				this.activeAction = action
 			},
 
 			clearActiveAction() {
 				this.activeAction = null
-			},
-
-			onDeletedNode(node: Node) {
-				if (this.activeNode && this.activeNode.source === node.source) {
-					this.clearActiveNode()
-				}
 			},
 
 			onChangedView(view: View|null = null) {

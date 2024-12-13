@@ -514,21 +514,6 @@ export default defineComponent({
 		},
 	},
 
-	created() {
-		// v toggle grid view
-		useHotKey('v', this.toggleGridView, {
-			stop: true,
-			prevent: true,
-		})
-
-		// alt+up go to parent directory
-		useHotKey('ArrowUp', this.goToPreviousDir, {
-			stop: true,
-			prevent: true,
-			alt: true,
-		})
-	},
-
 	mounted() {
 		this.filtersStore.init()
 		this.fetchContent()
@@ -725,16 +710,6 @@ export default defineComponent({
 				nodes = filter.filter(nodes)
 			}
 			this.dirContentsFiltered = nodes
-		},
-
-		goToPreviousDir() {
-			const prevDir = dirname(this.directory)
-			logger.debug('Navigating to parent directory', { prevDir })
-			window.OCP.Files.Router.goToRoute(
-				null,
-				{ ...this.$route.params },
-				{ ...this.$route.query, dir: prevDir },
-			)
 		},
 	},
 })

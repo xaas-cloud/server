@@ -9,7 +9,7 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { t } from '@nextcloud/l10n'
 import Vue from 'vue'
 
-import { pinia } from '../store'
+import { getPinia } from '../store'
 import { useActiveStore } from '../store/active'
 import logger from '../logger'
 
@@ -19,8 +19,8 @@ import logger from '../logger'
  * @param action The action to execute
  */
 export const executeAction = async (action: FileAction) => {
-	const activeStore = useActiveStore(pinia)
-	const currentDir = (window.OCP.Files.Router?.query?.dir || '/') as string
+	const activeStore = useActiveStore(getPinia())
+	const currentDir = (window?.OCP?.Files?.Router?.query?.dir || '/') as string
 	const currentNode = activeStore.activeNode
 	const currentView = activeStore.activeView
 

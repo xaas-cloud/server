@@ -2,12 +2,13 @@
  * SPDX-FileCopyrightText: 2023 Nextcloud GmbH and Nextcloud contributors
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
+import type { Pinia } from 'pinia'
 import { getCSPNonce } from '@nextcloud/auth'
 import { getNavigation } from '@nextcloud/files'
 import { PiniaVuePlugin } from 'pinia'
 import Vue from 'vue'
 
-import { pinia } from './store/index.ts'
+import { getPinia } from './store/index.ts'
 import { registerHotkeys } from './services/HotKeysService.ts'
 import FilesApp from './FilesApp.vue'
 import router from './router/router'
@@ -23,6 +24,7 @@ declare global {
 		OCP: Nextcloud.v29.OCP
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		OCA: Record<string, any>
+		_nc_files_pinia: Pinia
 	}
 }
 
@@ -55,5 +57,5 @@ Object.assign(window.OCA.Files.Settings, { Setting: SettingsModel })
 const FilesAppVue = Vue.extend(FilesApp)
 new FilesAppVue({
 	router: (window.OCP.Files.Router as RouterService)._router,
-	pinia,
+	pinia: getPinia(),
 }).$mount('#content')

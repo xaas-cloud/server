@@ -200,6 +200,9 @@ export default defineComponent({
 		},
 
 		resetSelection() {
+			if (this.isNoneSelected) {
+				return
+			}
 			this.selectionStore.reset()
 		},
 
