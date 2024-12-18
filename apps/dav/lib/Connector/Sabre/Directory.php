@@ -18,6 +18,8 @@ use OCP\Files\FileInfo;
 use OCP\Files\Folder;
 use OCP\Files\ForbiddenException;
 use OCP\Files\InvalidPathException;
+use OCP\Files\Mount\IMountManager;
+use OCP\Files\Mount\IMountPoint;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
 use OCP\Files\StorageNotAvailableException;
@@ -191,6 +193,18 @@ class Directory extends Node implements \Sabre\DAV\ICollection, \Sabre\DAV\IQuot
 		}
 
 		if (!$info) {
+			if (!$request) {
+				$request = \OC::$server->get(IRequest::class);
+			}
+			$a = $request->getHttpProtocol();
+			if ($request->getHeader('debug_not_found')) {
+				/** @var @var IMountManager $mountManager */
+				$mountManager = \OC::$server->get(IMountManager::class);
+				$mounts = array_map(function(IMountPoint $mountPoint) {
+					return $mountPoint->getMountPoint();
+				}, $mountManager->getAll());
+				throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located, available mounts: ' . implode(', ', $mounts));
+			}
 			throw new \Sabre\DAV\Exception\NotFound('File with name ' . $path . ' could not be located');
 		}
 
