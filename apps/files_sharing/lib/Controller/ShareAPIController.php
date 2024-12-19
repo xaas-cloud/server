@@ -675,6 +675,7 @@ class ShareAPIController extends OCSController {
 			}
 			$share->setSharedWith($shareWith);
 			$share->setPermissions($permissions);
+			$share->setMailSend(true);
 		} elseif ($shareType === IShare::TYPE_GROUP) {
 			if (!$this->shareManager->allowGroupSharing()) {
 				throw new OCSNotFoundException($this->l->t('Group sharing is disabled by the administrator'));
