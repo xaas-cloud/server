@@ -192,8 +192,9 @@ export default defineComponent({
 					root: this.currentFolder.root!,
 					id: Number.parseInt(upload.response?.headers?.['oc-fileid']),
 					permissions: this.currentFolder.permissions,
-					crtime: new Date(),
-					mtime: new Date(),
+					crtime: new Date(upload.file.lastModified || Date.now()),
+					mtime: new Date(upload.file.lastModified || Date.now()),
+					mime: upload.response?.request?.headers?.['Content-Type'] ?? upload.file.type,
 				}))
 			}
 

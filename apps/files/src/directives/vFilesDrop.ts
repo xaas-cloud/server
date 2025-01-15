@@ -36,6 +36,7 @@ const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties 
 	// We need to use `ondrop` instead of addEventListener as we have no reference to previous
 	// event listener to remove it from the component
 	el.ondrop = async (event: DragEvent) => {
+		const dataTransfer = event.dataTransfer
 		const options = typeof value === 'function' ? await value() : value
 
 		logger.debug('Start handling drop', { options })
@@ -56,13 +57,14 @@ const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties 
 		}
 		// Skip handling if event was aborted by the user (clicking somewhere)
 		if (event.button > 0) {
+			logger.debug('Drop aborted by user')
 			return options.callback?.([])
 		}
 
 		let result: INode[]|Upload[] = []
 		const draggingStore = useDragAndDropStore()
 		if (draggingStore.isDragging) {
-			// Internal files are being dragged
+			logger.debug('Internal files are being dragged')
 			const filesStore = useFilesStore()
 			const nodes = filesStore.getNodes(draggingStore.dragging)
 			await onDropInternalFiles(
@@ -71,12 +73,15 @@ const onFileDrop: DirectiveHook<HTMLElement, VNode | null, OnFileDropProperties 
 				event.ctrlKey,
 			)
 			result = nodes
-		} else if (event.dataTransfer) {
+		} else if (dataTransfer) {
+			logger.debug('Dropped external files')
 			const uploads = await onDropExternalFiles(
-				event.dataTransfer,
+				dataTransfer,
 				options.targetFolder,
 			)
 			result = uploads
+		} else {
+			logger.debug('Drag and drop: Neither internal files are being dropped nor a datatransfer is available', { event })
 		}
 
 		return options.callback?.(result)

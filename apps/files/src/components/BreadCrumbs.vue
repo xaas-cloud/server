@@ -116,7 +116,7 @@ export default defineComponent({
 				dir,
 				to: this.getTo(dir),
 				name: basename(dir),
-				onDrop: () => this.onDrop(dir)
+				onDrop: () => this.onDrop(dir),
 			}))
 		},
 
@@ -158,13 +158,13 @@ export default defineComponent({
 			if (folder === undefined) {
 				const result = await this.currentView!.getContents(dir)
 				folder = result.folder
+				// Cache folder and children (potentially also part of the breadcrumbs)
 				emit('files:node:created', folder)
 				result.contents.forEach((node) => {
-					if (node.type === FileType.Folder) {
+					if (node.type === FileType.Folder && this.getNodeFromSource(node.source) === undefined) {
 						emit('files:node:created', node)
 					}
 				})
-				folder = result.folder
 			}
 			this.folders[dir] = folder as Folder
 

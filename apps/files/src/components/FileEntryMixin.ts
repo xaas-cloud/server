@@ -11,6 +11,7 @@ import { generateUrl } from '@nextcloud/router'
 import { isPublicShare } from '@nextcloud/sharing/public'
 import { t } from '@nextcloud/l10n'
 import { vOnClickOutside } from '@vueuse/components'
+import { extname } from 'path'
 import Vue, { computed, defineComponent } from 'vue'
 
 import { action as sidebarAction } from '../actions/sidebarAction.ts'
@@ -371,6 +372,14 @@ export default defineComponent({
 				return
 			}
 
+			this.dragover = false
+		},
+
+		/**
+		 * Callback when the drop listener is done.
+		 * We reset the dragover state.
+		 */
+		onDrop() {
 			this.dragover = false
 		},
 

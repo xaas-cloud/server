@@ -15,8 +15,9 @@
 		:draggable="canDrag"
 		class="files-list__row"
 		v-files-drop="{
-			enabled: isFolder,
+			disabled: !isFolder,
 			targetFolder: source,
+			callback: onDrop,
 		}"
 		v-on="rowListeners">
 		<!-- Failed indicator -->
