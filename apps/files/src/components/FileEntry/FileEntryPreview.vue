@@ -14,24 +14,18 @@
 			</template>
 		</template>
 
-		<!-- Decorative images, should not be aria documented -->
-		<span v-else-if="previewUrl" class="files-list__row-icon-preview-container">
-			<canvas v-if="hasBlurhash && (backgroundFailed === true || !backgroundLoaded)"
-				ref="canvas"
+		<span v-else class="files-list__row-icon-preview-container">
+			<BlurHash v-if="blurHash && showBlurHash"
 				class="files-list__row-icon-blurhash"
-				aria-hidden="true" />
-			<img v-if="backgroundFailed !== true"
-				ref="previewImg"
+				:hash="blurHash" />
+
+			<img v-else-if="previewUrl && showPreview"
 				alt=""
 				class="files-list__row-icon-preview"
-				:class="{'files-list__row-icon-preview--loaded': backgroundFailed === false}"
-				loading="lazy"
-				:src="previewUrl"
-				@error="onBackgroundError"
-				@load="onBackgroundLoad">
-		</span>
+				:src="previewUrl.href">
 
-		<FileIcon v-else v-once />
+			<FileIcon v-else v-once />
+		</span>
 
 		<!-- Favorite icon -->
 		<span v-if="isFavorite" class="files-list__row-icon-favorite">
@@ -46,15 +40,12 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { UserConfig } from '../../types.ts'
 
 import { Node, FileType } from '@nextcloud/files'
 import { translate as t } from '@nextcloud/l10n'
-import { generateUrl } from '@nextcloud/router'
 import { ShareType } from '@nextcloud/sharing'
 import { getSharingToken, isPublicShare } from '@nextcloud/sharing/public'
-import { decode } from 'blurhash'
-import { defineComponent } from 'vue'
+import { computed, defineComponent } from 'vue'
 
 import AccountGroupIcon from 'vue-material-design-icons/AccountGroup.vue'
 import AccountPlusIcon from 'vue-material-design-icons/AccountPlus.vue'
@@ -67,12 +58,13 @@ import NetworkIcon from 'vue-material-design-icons/Network.vue'
 import TagIcon from 'vue-material-design-icons/Tag.vue'
 import PlayCircleIcon from 'vue-material-design-icons/PlayCircle.vue'
 
+import BlurHash from './BlurHash.vue'
 import CollectivesIcon from './CollectivesIcon.vue'
 import FavoriteIcon from './FavoriteIcon.vue'
 
 import { isLivePhoto } from '../../services/LivePhotos'
 import { useUserConfigStore } from '../../store/userconfig.ts'
-import logger from '../../logger.ts'
+import { usePreviewUrl } from '../../composables/usePreview.ts'
 
 export default defineComponent({
 	name: 'FileEntryPreview',
@@ -80,6 +72,7 @@ export default defineComponent({
 	components: {
 		AccountGroupIcon,
 		AccountPlusIcon,
+		BlurHash,
 		CollectivesIcon,
 		FavoriteIcon,
 		FileIcon,
@@ -106,75 +99,30 @@ export default defineComponent({
 		},
 	},
 
-	setup() {
+	setup(props) {
 		const userConfigStore = useUserConfigStore()
 		const isPublic = isPublicShare()
 		const publicSharingToken = getSharingToken()
 
-		return {
-			userConfigStore,
+		// Options of the preview URL
+		// This needs to be reactive to react to user config changes
+		// as well as changing of the grid mode
+		const previewSettings = computed(() => ({
+			cropPreview: userConfigStore.userConfig.crop_image_previews,
+			mimeFallback: true,
+			size: props.gridMode ? 128 : 32,
+		}))
 
+		return {
 			isPublic,
 			publicSharingToken,
-		}
-	},
-
-	data() {
-		return {
-			backgroundFailed: undefined as boolean | undefined,
-			backgroundLoaded: false,
+			...usePreviewUrl(() => props.source, previewSettings),
 		}
 	},
 
 	computed: {
 		isFavorite(): boolean {
 			return this.source.attributes.favorite === 1
-		},
-
-		userConfig(): UserConfig {
-			return this.userConfigStore.userConfig
-		},
-		cropPreviews(): boolean {
-			return this.userConfig.crop_image_previews === true
-		},
-
-		previewUrl() {
-			if (this.source.type === FileType.Folder) {
-				return null
-			}
-
-			if (this.backgroundFailed === true) {
-				return null
-			}
-
-			try {
-				const previewUrl = this.source.attributes.previewUrl
-					|| (this.isPublic
-						? generateUrl('/apps/files_sharing/publicpreview/{token}?file={file}', {
-							token: this.publicSharingToken,
-							file: this.source.path,
-						})
-						: generateUrl('/core/preview?fileId={fileid}', {
-							fileid: String(this.source.fileid),
-						})
-					)
-				const url = new URL(window.location.origin + previewUrl)
-
-				// Request tiny previews
-				url.searchParams.set('x', this.gridMode ? '128' : '32')
-				url.searchParams.set('y', this.gridMode ? '128' : '32')
-				url.searchParams.set('mimeFallback', 'true')
-
-				// Etag to force refresh preview on change
-				const etag = this.source?.attributes?.etag || ''
-				url.searchParams.set('v', etag.slice(0, 6))
-
-				// Handle cropping
-				url.searchParams.set('a', this.cropPreviews === true ? '0' : '1')
-				return url.href
-			} catch (e) {
-				return null
-			}
 		},
 
 		fileOverlay() {
@@ -226,60 +174,30 @@ export default defineComponent({
 			return null
 		},
 
-		hasBlurhash() {
-			return this.source.attributes['metadata-blurhash'] !== undefined
+		blurHash(): string | undefined {
+			return this.source.attributes['metadata-blurhash']
 		},
-	},
 
-	mounted() {
-		if (this.hasBlurhash && this.$refs.canvas) {
-			this.drawBlurhash()
-		}
+		/**
+		 * If true the blue hash is shown instead of the preview
+		 */
+		showBlurHash(): boolean {
+			return !!this.blurHash && !this.showPreview
+		},
+
+		/**
+		 * If true the preview is shown,
+		 * meaning a preview is available and loaded without errors
+		 */
+		showPreview(): boolean {
+			return this.previewUrl !== null && this.previewLoaded
+		},
 	},
 
 	methods: {
 		// Called from FileEntry
 		reset() {
-			// Reset background state to cancel any ongoing requests
-			this.backgroundFailed = undefined
-			this.backgroundLoaded = false
-			const previewImg = this.$refs.previewImg as HTMLImageElement | undefined
-			if (previewImg) {
-				previewImg.src = ''
-			}
-		},
-
-		onBackgroundLoad() {
-			this.backgroundFailed = false
-			this.backgroundLoaded = true
-		},
-
-		onBackgroundError(event) {
-			// Do not fail if we just reset the background
-			if (event.target?.src === '') {
-				return
-			}
-			this.backgroundFailed = true
-			this.backgroundLoaded = false
-		},
-
-		drawBlurhash() {
-			const canvas = this.$refs.canvas as HTMLCanvasElement
-
-			const width = canvas.width
-			const height = canvas.height
-
-			const pixels = decode(this.source.attributes['metadata-blurhash'], width, height)
-
-			const ctx = canvas.getContext('2d')
-			if (ctx === null) {
-				logger.error('Cannot create context for blurhash canvas')
-				return
-			}
-
-			const imageData = ctx.createImageData(width, height)
-			imageData.data.set(pixels)
-			ctx.putImageData(imageData, 0, 0)
+			this.stopPreview()
 		},
 
 		t,

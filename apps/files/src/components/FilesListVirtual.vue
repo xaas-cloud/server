@@ -693,18 +693,15 @@ export default defineComponent({
 			}
 
 			&-preview {
+				// Ensure the fallback icon is main text color
+				color: var(--color-main-text);
+
 				// Center and contain the preview
 				object-fit: contain;
 				object-position: center;
 
 				height: 100%;
 				width: 100%;
-
-				/* Preview not loaded animation effect */
-				&:not(.files-list__row-icon-preview--loaded) {
-					background: var(--color-loading-dark);
-					// animation: preview-gradient-fade 1.2s ease-in-out infinite;
-				}
 			}
 
 			&-favorite {
