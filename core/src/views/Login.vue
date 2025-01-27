@@ -105,7 +105,6 @@
 
 <script>
 import { loadState } from '@nextcloud/initial-state'
-import queryString from 'query-string'
 
 import LoginForm from '../components/login/LoginForm.vue'
 import PasswordLessLoginForm from '../components/login/PasswordLessLoginForm.vue'
@@ -113,17 +112,7 @@ import ResetPassword from '../components/login/ResetPassword.vue'
 import UpdatePassword from '../components/login/UpdatePassword.vue'
 import NcButton from '@nextcloud/vue/dist/Components/NcButton.js'
 import NcNoteCard from '@nextcloud/vue/dist/Components/NcNoteCard.js'
-
-const query = queryString.parse(location.search)
-if (query.clear === '1') {
-	try {
-		window.localStorage.clear()
-		window.sessionStorage.clear()
-		console.debug('Browser storage cleared')
-	} catch (e) {
-		console.error('Could not clear browser storage', e)
-	}
-}
+import logger from '../logger'
 
 export default {
 	name: 'Login',
@@ -162,6 +151,20 @@ export default {
 			isLocalhost: window.location.hostname === 'localhost',
 			hideLoginForm: loadState('core', 'hideLoginForm', false),
 			emailStates: loadState('core', 'emailStates', []),
+		}
+	},
+
+	beforeCreate() {
+		const clear = window.location.searchParams.get('clear')
+
+		if (clear === '1') {
+			try {
+				window.localStorage.clear()
+				window.sessionStorage.clear()
+				logger.debug('Browser storage cleared')
+			} catch (error) {
+				logger.error('Could not clear browser storage', { error })
+			}
 		}
 	},
 

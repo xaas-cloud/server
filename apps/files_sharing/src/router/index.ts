@@ -7,7 +7,6 @@ import type { ErrorHandler } from 'vue-router/types/router.d.ts'
 
 import { loadState } from '@nextcloud/initial-state'
 import { generateUrl } from '@nextcloud/router'
-import queryString from 'query-string'
 import Router from 'vue-router'
 import Vue from 'vue'
 
@@ -44,9 +43,10 @@ const router = new Router({
 		},
 	],
 
-	// Custom stringifyQuery to prevent encoding of slashes in the url
 	stringifyQuery(query) {
-		const result = queryString.stringify(query).replace(/%2F/gmi, '/')
+		const params = new URLSearchParams(Object.entries(query))
+		const result = params.toString().replace(/%2F/gmi, '/')
+		// Only for vue-router 3 (vue2) we need to prepend a `?`
 		return result ? ('?' + result) : ''
 	},
 })
