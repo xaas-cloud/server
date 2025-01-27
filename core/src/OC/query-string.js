@@ -10,6 +10,7 @@ import $ from 'jquery'
  *
  * @param {string} queryString query string in the format param1=1234&param2=abcde&param3=xyz
  * @return {Record<string, string>} map containing key/values matching the URL parameters
+ * @deprecated 32.0.0 use `URLSearchParams` directly
  */
 export const parse = queryString => {
 	let pos
@@ -60,6 +61,7 @@ export const parse = queryString => {
  *
  * @param {Record<string, string>} params map containing key/values matching the URL parameters
  * @return {string} String containing a URL query (without question) mark
+ * @deprecated 32.0.0 use `URLSearchParams` directly
  */
 export const build = params => {
 	if (!params) {

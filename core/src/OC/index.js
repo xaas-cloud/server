@@ -212,10 +212,14 @@ export default {
 	 */
 	getLanguage,
 
+	// Query string helpers
 	/**
-	 * Query string helpers
+	 * @deprecated 32.0.0 use `URLSearchParams` directly
 	 */
 	buildQueryString,
+	/**
+	 * @deprecated 32.0.0 use `URLSearchParams` directly
+	 */
 	parseQueryString,
 
 	msg,
