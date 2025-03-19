@@ -15,13 +15,14 @@ use OC\App\InfoParser;
 use OC\IntegrityCheck\Helpers\AppLocator;
 use OC\Migration\SimpleOutput;
 use OCP\AppFramework\App;
-use OCP\AppFramework\QueryException;
 use OCP\DB\ISchemaWrapper;
 use OCP\DB\Types;
+use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Migration\IMigrationStep;
 use OCP\Migration\IOutput;
 use OCP\Server;
+use Psr\Container\NotFoundExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 class MigrationService {
@@ -40,6 +41,7 @@ class MigrationService {
 	 */
 	public function __construct(string $appName, Connection $connection, ?IOutput $output = null, ?AppLocator $appLocator = null, ?LoggerInterface $logger = null) {
 		$this->appName = $appName;
+		$this->checkOracle = false;
 		$this->connection = $connection;
 		if ($logger === null) {
 			$this->logger = Server::get(LoggerInterface::class);
@@ -98,7 +100,7 @@ class MigrationService {
 			return false;
 		}
 
-		if ($this->connection->tableExists('migrations') && \OC::$server->getConfig()->getAppValue('core', 'vendor', '') !== 'owncloud') {
+		if ($this->connection->tableExists('migrations') && \OCP\Server::get(IConfig::class)->getAppValue('core', 'vendor', '') !== 'owncloud') {
 			$this->migrationTableCreated = true;
 			return false;
 		}
@@ -277,7 +279,7 @@ class MigrationService {
 	/**
 	 * @param string $version
 	 */
-	private function markAsExecuted($version) {
+	private function markAsExecuted($version): void {
 		$this->connection->insertIfNotExist('*PREFIX*migrations', [
 			'app' => $this->appName,
 			'version' => $version
@@ -338,7 +340,7 @@ class MigrationService {
 
 		$versions = $this->getAvailableVersions();
 		array_unshift($versions, '0');
-		/** @var int $offset */
+		/** @var int|false $offset */
 		$offset = array_search($version, $versions, true);
 		if ($offset === false || !isset($versions[$offset + $delta])) {
 			// Unknown version or delta out of bounds.
@@ -353,8 +355,7 @@ class MigrationService {
 		if (count($m) === 0) {
 			return '0';
 		}
-		$migrations = array_values($m);
-		return @end($migrations);
+		return @end($m);
 	}
 
 	/**
@@ -468,14 +469,11 @@ class MigrationService {
 	 * @throws \InvalidArgumentException
 	 */
 	public function createInstance($version) {
+		/** @psalm-var class-string<IMigrationStep> $class */
 		$class = $this->getClass($version);
 		try {
 			$s = \OCP\Server::get($class);
-
-			if (!$s instanceof IMigrationStep) {
-				throw new \InvalidArgumentException('Not a valid migration');
-			}
-		} catch (QueryException $e) {
+		} catch (NotFoundExceptionInterface) {
 			if (class_exists($class)) {
 				$s = new $class();
 			} else {
@@ -483,6 +481,9 @@ class MigrationService {
 			}
 		}
 
+		if (!$s instanceof IMigrationStep) {
+			throw new \InvalidArgumentException('Not a valid migration');
+		}
 		return $s;
 	}
 
@@ -493,7 +494,7 @@ class MigrationService {
 	 * @param bool $schemaOnly
 	 * @throws \InvalidArgumentException
 	 */
-	public function executeStep($version, $schemaOnly = false) {
+	public function executeStep($version, $schemaOnly = false): void {
 		$instance = $this->createInstance($version);
 
 		if (!$schemaOnly) {
@@ -790,7 +791,7 @@ class MigrationService {
 		}
 	}
 
-	private function ensureMigrationsAreLoaded() {
+	private function ensureMigrationsAreLoaded(): void {
 		if (empty($this->migrations)) {
 			$this->migrations = $this->findMigrations();
 		}
