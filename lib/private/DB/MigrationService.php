@@ -513,7 +513,7 @@ class MigrationService {
 			$this->ensureUniqueNamesConstraints($targetSchema, $schemaOnly);
 			$this->ensureNamingConstraints($sourceSchema, $targetSchema, \strlen($this->connection->getPrefix()));
 			if ($this->checkOracle) {
-				$this->ensureOracleConstraints($sourceSchema, $targetSchema, strlen($this->connection->getPrefix()));
+				$this->ensureOracleConstraints($sourceSchema, $targetSchema));
 			}
 			$this->connection->migrateToSchema($targetSchema);
 			$toSchema->performDropTableCalls();
