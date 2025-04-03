@@ -2556,16 +2556,10 @@
     </UndefinedInterfaceMethod>
   </file>
   <file src="lib/private/User/Session.php">
-    <ImplementedReturnTypeMismatch>
-      <code><![CDATA[boolean|null]]></code>
-    </ImplementedReturnTypeMismatch>
     <NoInterfaceProperties>
       <code><![CDATA[$request->server]]></code>
       <code><![CDATA[$request->server]]></code>
     </NoInterfaceProperties>
-    <RedundantCondition>
-      <code><![CDATA[$this->manager instanceof PublicEmitter]]></code>
-    </RedundantCondition>
   </file>
   <file src="lib/private/User/User.php">
     <UndefinedInterfaceMethod>

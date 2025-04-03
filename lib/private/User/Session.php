@@ -14,7 +14,6 @@ use OC\Authentication\Token\IToken;
 use OC\Authentication\Token\PublicKeyToken;
 use OC\Authentication\TwoFactorAuth\Manager as TwoFactorAuthManager;
 use OC\Hooks\Emitter;
-use OC\Hooks\PublicEmitter;
 use OC\Security\CSRF\CsrfTokenManager;
 use OC_User;
 use OC_Util;
@@ -36,8 +35,14 @@ use OCP\Lockdown\ILockdownManager;
 use OCP\Security\Bruteforce\IThrottler;
 use OCP\Security\ISecureRandom;
 use OCP\Session\Exceptions\SessionNotAvailableException;
+use OCP\User\Events\BeforeUserLoggedInEvent;
+use OCP\User\Events\BeforeUserLoggedInWithCookieEvent;
+use OCP\User\Events\BeforeUserLoggedOutEvent;
 use OCP\User\Events\PostLoginEvent;
 use OCP\User\Events\UserFirstTimeLoggedInEvent;
+use OCP\User\Events\UserLoggedInEvent;
+use OCP\User\Events\UserLoggedInWithCookieEvent;
+use OCP\User\Events\UserLoggedOutEvent;
 use OCP\Util;
 use Psr\Log\LoggerInterface;
 
@@ -66,8 +71,7 @@ use Psr\Log\LoggerInterface;
 class Session implements IUserSession, Emitter {
 	use TTransactional;
 
-	/** @var User $activeUser */
-	protected $activeUser;
+	protected ?IUser $activeUser = null;
 
 	public function __construct(
 		private Manager $manager,
@@ -110,7 +114,7 @@ class Session implements IUserSession, Emitter {
 	/**
 	 * get the manager object
 	 *
-	 * @return Manager|PublicEmitter
+	 * @return Manager
 	 */
 	public function getManager() {
 		return $this->manager;
@@ -296,7 +300,7 @@ class Session implements IUserSession, Emitter {
 	 *
 	 * @param string $uid
 	 * @param string $password
-	 * @return boolean|null
+	 * @return boolean
 	 * @throws LoginException
 	 */
 	public function login($uid, $password) {
@@ -345,14 +349,16 @@ class Session implements IUserSession, Emitter {
 			$user,
 			$loginDetails['loginName'],
 			$loginDetails['password'],
-			$isToken
+			$isToken,
 		));
-		$this->manager->emit('\OC\User', 'postLogin', [
+
+		$this->dispatcher->dispatchTyped(new UserLoggedInEvent(
 			$user,
 			$loginDetails['loginName'],
 			$loginDetails['password'],
 			$isToken,
-		]);
+		));
+
 		if ($this->isLoggedIn()) {
 			$this->prepareUserLogin($firstTimeLogin, $regenerateSessionId);
 			return true;
@@ -383,9 +389,9 @@ class Session implements IUserSession, Emitter {
 		$remoteAddress = $request->getRemoteAddress();
 		$currentDelay = $throttler->sleepDelayOrThrowOnMax($remoteAddress, 'login');
 
-		if ($this->manager instanceof PublicEmitter) {
-			$this->manager->emit('\OC\User', 'preLogin', [$user, $password]);
-		}
+		$this->dispatcher->dispatchTyped(
+			new BeforeUserLoggedInEvent($user, $password),
+		);
 
 		try {
 			$isTokenPassword = $this->isTokenPassword($password);
@@ -524,8 +530,8 @@ class Session implements IUserSession, Emitter {
 			}
 
 			// trigger any other initialization
-			\OC::$server->get(IEventDispatcher::class)->dispatch(IUser::class . '::firstLogin', new GenericEvent($this->getUser()));
-			\OC::$server->get(IEventDispatcher::class)->dispatchTyped(new UserFirstTimeLoggedInEvent($this->getUser()));
+			$this->dispatcher->dispatch(IUser::class . '::firstLogin', new GenericEvent($this->getUser()));
+			$this->dispatcher->dispatchTyped(new UserFirstTimeLoggedInEvent($this->getUser()));
 		}
 	}
 
@@ -537,8 +543,7 @@ class Session implements IUserSession, Emitter {
 	 * @param IThrottler $throttler
 	 * @return boolean if the login was successful
 	 */
-	public function tryBasicAuthLogin(IRequest $request,
-		IThrottler $throttler) {
+	public function tryBasicAuthLogin(IRequest $request, IThrottler $throttler) {
 		if (!empty($request->server['PHP_AUTH_USER']) && !empty($request->server['PHP_AUTH_PW'])) {
 			try {
 				if ($this->logClientIn($request->server['PHP_AUTH_USER'], $request->server['PHP_AUTH_PW'], $request, $throttler)) {
@@ -608,7 +613,9 @@ class Session implements IUserSession, Emitter {
 			// Ignore and use empty string instead
 		}
 
-		$this->manager->emit('\OC\User', 'preLogin', [$dbToken->getLoginName(), $password]);
+		$this->dispatcher->dispatchTyped(
+			new BeforeUserLoggedInEvent($dbToken->getLoginName(), $password),
+		);
 
 		$user = $this->manager->get($uid);
 		if (is_null($user)) {
@@ -852,7 +859,11 @@ class Session implements IUserSession, Emitter {
 	 */
 	public function loginWithCookie($uid, $currentToken, $oldSessionId) {
 		$this->session->regenerateId();
-		$this->manager->emit('\OC\User', 'preRememberedLogin', [$uid]);
+
+		$this->dispatcher->dispatchTyped(
+			new BeforeUserLoggedInWithCookieEvent($uid),
+		);
+
 		$user = $this->manager->get($uid);
 		if (is_null($user)) {
 			// user does not exist
@@ -909,13 +920,17 @@ class Session implements IUserSession, Emitter {
 		$this->setToken($token->getId());
 		$this->lockdownManager->setToken($token);
 		$user->updateLastLoginTimestamp();
+
 		$password = null;
 		try {
 			$password = $this->tokenProvider->getPassword($token, $sessionId);
 		} catch (PasswordlessTokenException $ex) {
 			// Ignore
 		}
-		$this->manager->emit('\OC\User', 'postRememberedLogin', [$user, $password]);
+
+		$this->dispatcher->dispatchTyped(
+			new UserLoggedInWithCookieEvent($user, $password),
+		);
 		return true;
 	}
 
@@ -933,7 +948,8 @@ class Session implements IUserSession, Emitter {
 	 */
 	public function logout() {
 		$user = $this->getUser();
-		$this->manager->emit('\OC\User', 'logout', [$user]);
+		$this->dispatcher->dispatchTyped(new BeforeUserLoggedOutEvent($user));
+
 		if ($user !== null) {
 			try {
 				$token = $this->session->getId();
@@ -952,7 +968,8 @@ class Session implements IUserSession, Emitter {
 		$this->setToken(null);
 		$this->unsetMagicInCookie();
 		$this->session->clear();
-		$this->manager->emit('\OC\User', 'postLogout', [$user]);
+
+		$this->dispatcher->dispatchTyped(new UserLoggedOutEvent($user));
 	}
 
 	/**
