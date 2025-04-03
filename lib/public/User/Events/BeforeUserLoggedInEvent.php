@@ -21,6 +21,7 @@ class BeforeUserLoggedInEvent extends Event {
 	private ?IApacheBackend $backend;
 
 	/**
+	 * @param string $username - The login name of the user (not necessarily the uid)
 	 * @since 18.0.0
 	 * @since 26.0.0 password can be null
 	 */

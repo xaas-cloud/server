@@ -10,7 +10,7 @@ namespace OC\Authentication\Login;
 
 class Chain {
 	public function __construct(
-		private PreLoginHookCommand $preLoginHookCommand,
+		private BeforeUserLoggedInEventCommand $beforeUserLoggedInEventCommand,
 		private UserDisabledCheckCommand $userDisabledCheckCommand,
 		private UidLoginCommand $uidLoginCommand,
 		private LoggedInCheckCommand $loggedInCheckCommand,
@@ -26,7 +26,7 @@ class Chain {
 	}
 
 	public function process(LoginData $loginData): LoginResult {
-		$chain = $this->preLoginHookCommand;
+		$chain = $this->beforeUserLoggedInEventCommand;
 		$chain
 			->setNext($this->userDisabledCheckCommand)
 			->setNext($this->uidLoginCommand)
