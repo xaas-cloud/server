@@ -18,11 +18,11 @@ use OCP\Group\Events\UserAddedEvent;
 use OCP\Group\Events\UserRemovedEvent;
 use OCP\IGroupManager;
 use OCP\IUser;
-use OCP\User\Events\PostLoginEvent;
+use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 
 /**
- * @template-implements IEventListener<PostLoginEvent>
+ * @template-implements IEventListener<UserLoggedInEvent>
  */
 class LoginListener implements IEventListener {
 	public function __construct(
@@ -35,7 +35,7 @@ class LoginListener implements IEventListener {
 	}
 
 	public function handle(Event $event): void {
-		if ($event instanceof PostLoginEvent) {
+		if ($event instanceof UserLoggedInEvent) {
 			$this->onPostLogin($event->getUser());
 		}
 	}

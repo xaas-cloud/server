@@ -38,7 +38,6 @@ use OCP\IServerContainer;
 use OCP\IUserManager;
 use OCP\Notification\IManager as INotificationManager;
 use OCP\Share\IManager as IShareManager;
-use OCP\User\Events\PostLoginEvent;
 use OCP\Util;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -95,7 +94,7 @@ class Application extends App implements IBootstrap {
 			// the instance is specific to a lazy bound Access instance, thus cannot be shared.
 			false
 		);
-		$context->registerEventListener(PostLoginEvent::class, LoginListener::class);
+		$context->registerEventListener(UserLoggedInEvent::class, LoginListener::class);
 		$context->registerSetupCheck(LdapInvalidUuids::class);
 		$context->registerSetupCheck(LdapConnection::class);
 	}

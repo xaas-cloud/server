@@ -11,10 +11,10 @@ namespace OC\Authentication\Listeners;
 use OC\Authentication\Token\Manager;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
-use OCP\User\Events\PostLoginEvent;
+use OCP\User\Events\UserLoggedInEvent;
 
 /**
- * @template-implements IEventListener<\OCP\User\Events\PostLoginEvent>
+ * @template-implements IEventListener<UserLoggedInEvent>
  */
 class UserLoggedInListener implements IEventListener {
 	/** @var Manager */
@@ -25,7 +25,7 @@ class UserLoggedInListener implements IEventListener {
 	}
 
 	public function handle(Event $event): void {
-		if (!($event instanceof PostLoginEvent)) {
+		if (!($event instanceof UserLoggedInEvent)) {
 			return;
 		}
 
