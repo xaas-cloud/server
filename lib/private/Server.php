@@ -122,6 +122,7 @@ use OC\Translation\TranslationManager;
 use OC\User\AvailabilityCoordinator;
 use OC\User\DisplayNameCache;
 use OC\User\Listeners\BeforeUserDeletedListener;
+use OC\User\Listeners\LegacyUserHooksAdapterListener;
 use OC\User\Listeners\UserChangedListener;
 use OC\User\Session;
 use OCA\Files_External\Service\BackendService;
@@ -513,46 +514,6 @@ class Server extends ServerContainer implements IServerContainer {
 			$userSession->listen('\OC\User', 'postSetPassword', function ($user, $password, $recoveryPassword) {
 				/** @var \OC\User\User $user */
 				\OC_Hook::emit('OC_User', 'post_setPassword', ['run' => true, 'uid' => $user->getUID(), 'password' => $password, 'recoveryPassword' => $recoveryPassword]);
-			});
-			$userSession->listen('\OC\User', 'preLogin', function ($uid, $password) {
-				\OC_Hook::emit('OC_User', 'pre_login', ['run' => true, 'uid' => $uid, 'password' => $password]);
-
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new BeforeUserLoggedInEvent($uid, $password));
-			});
-			$userSession->listen('\OC\User', 'postLogin', function ($user, $loginName, $password, $isTokenLogin) {
-				/** @var \OC\User\User $user */
-				\OC_Hook::emit('OC_User', 'post_login', ['run' => true, 'uid' => $user->getUID(), 'loginName' => $loginName, 'password' => $password, 'isTokenLogin' => $isTokenLogin]);
-
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new UserLoggedInEvent($user, $loginName, $password, $isTokenLogin));
-			});
-			$userSession->listen('\OC\User', 'preRememberedLogin', function ($uid) {
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new BeforeUserLoggedInWithCookieEvent($uid));
-			});
-			$userSession->listen('\OC\User', 'postRememberedLogin', function ($user, $password) {
-				/** @var \OC\User\User $user */
-				\OC_Hook::emit('OC_User', 'post_login', ['run' => true, 'uid' => $user->getUID(), 'password' => $password]);
-
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new UserLoggedInWithCookieEvent($user, $password));
-			});
-			$userSession->listen('\OC\User', 'logout', function ($user) {
-				\OC_Hook::emit('OC_User', 'logout', []);
-
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new BeforeUserLoggedOutEvent($user));
-			});
-			$userSession->listen('\OC\User', 'postLogout', function ($user) {
-				/** @var IEventDispatcher $dispatcher */
-				$dispatcher = $this->get(IEventDispatcher::class);
-				$dispatcher->dispatchTyped(new UserLoggedOutEvent($user));
 			});
 			$userSession->listen('\OC\User', 'changeUser', function ($user, $feature, $value, $oldValue) {
 				/** @var \OC\User\User $user */
@@ -1335,6 +1296,14 @@ class Server extends ServerContainer implements IServerContainer {
 		$eventDispatcher->addServiceListener(PostLoginEvent::class, UserLoggedInListener::class);
 		$eventDispatcher->addServiceListener(UserChangedEvent::class, UserChangedListener::class);
 		$eventDispatcher->addServiceListener(BeforeUserDeletedEvent::class, BeforeUserDeletedListener::class);
+
+		// handle legacy hooks
+		$eventDispatcher->addServiceListener(BeforeUserLoggedOutEvent::class, LegacyUserHooksAdapterListener::class);
+		$eventDispatcher->addServiceListener(BeforeUserLoggedInEvent::class, LegacyUserHooksAdapterListener::class);
+		$eventDispatcher->addServiceListener(BeforeUserLoggedInWithCookieEvent::class, LegacyUserHooksAdapterListener::class);
+		$eventDispatcher->addServiceListener(UserLoggedInEvent::class, LegacyUserHooksAdapterListener::class);
+		$eventDispatcher->addServiceListener(UserLoggedInWithCookieEvent::class, LegacyUserHooksAdapterListener::class);
+		$eventDispatcher->addServiceListener(UserLoggedOutEvent::class, LegacyUserHooksAdapterListener::class);
 
 		FilesMetadataManager::loadListeners($eventDispatcher);
 		GenerateBlurhashMetadata::loadListeners($eventDispatcher);
