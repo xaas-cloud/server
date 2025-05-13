@@ -155,7 +155,7 @@ import type { UserConfig } from '../types.ts'
 import { mdiAccountPlus, mdiAlertCircleCheckOutline, mdiFormatListBulletedSquare, mdiLink, mdiViewGrid } from '@mdi/js'
 import { getCapabilities } from '@nextcloud/capabilities'
 import { emit, subscribe, unsubscribe } from '@nextcloud/event-bus'
-import { Node, Permission, sortNodes, getFileListActions } from '@nextcloud/files'
+import { Node, Permission, getFileListActions } from '@nextcloud/files'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { join, dirname, normalize } from 'path'
@@ -193,7 +193,6 @@ import DragAndDropNotice from '../components/DragAndDropNotice.vue'
 import FilesListHeader from '../components/FilesListHeader.vue'
 import FilesListSearchResults from '../components/FilesListSearchResults.vue'
 import FilesList from '../components/FilesList.vue'
-import filesSortingMixin from '../mixins/filesSorting.ts'
 import logger from '../logger.ts'
 
 const isSharingEnabled = (getCapabilities() as { files_sharing?: boolean })?.files_sharing !== undefined
@@ -217,10 +216,6 @@ export default defineComponent({
 		NcIconSvgWrapper,
 		NcLoadingIcon,
 	},
-
-	mixins: [
-		filesSortingMixin,
-	],
 
 	props: {
 		isPublic: {

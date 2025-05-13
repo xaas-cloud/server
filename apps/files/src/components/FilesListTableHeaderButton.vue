@@ -27,8 +27,6 @@ import MenuDown from 'vue-material-design-icons/MenuDown.vue'
 import MenuUp from 'vue-material-design-icons/MenuUp.vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 
-import filesSortingMixin from '../mixins/filesSorting.ts'
-
 export default defineComponent({
 	name: 'FilesListTableHeaderButton',
 
@@ -37,10 +35,6 @@ export default defineComponent({
 		MenuUp,
 		NcButton,
 	},
-
-	mixins: [
-		filesSortingMixin,
-	],
 
 	props: {
 		name: {

@@ -67,7 +67,6 @@ import { useFilesStore } from '../store/files.ts'
 import { useNavigation } from '../composables/useNavigation'
 import { useSelectionStore } from '../store/selection.ts'
 import FilesListTableHeaderButton from './FilesListTableHeaderButton.vue'
-import filesSortingMixin from '../mixins/filesSorting.ts'
 import logger from '../logger.ts'
 
 export default defineComponent({
@@ -77,10 +76,6 @@ export default defineComponent({
 		FilesListTableHeaderButton,
 		NcCheckboxRadioSwitch,
 	},
-
-	mixins: [
-		filesSortingMixin,
-	],
 
 	props: {
 		isMtimeAvailable: {
