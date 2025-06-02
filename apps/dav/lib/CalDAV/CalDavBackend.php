@@ -48,6 +48,7 @@ use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Sabre\CalDAV\Backend\AbstractBackend;
 use Sabre\CalDAV\Backend\SchedulingSupport;
+use Sabre\CalDAV\Backend\SharingSupport;
 use Sabre\CalDAV\Backend\SubscriptionSupport;
 use Sabre\CalDAV\Backend\SyncSupport;
 use Sabre\CalDAV\Xml\Property\ScheduleCalendarTransp;
@@ -104,7 +105,7 @@ use function time;
  *     '{http://nextcloud.com/ns}owner-displayname': string,
  * }
  */
-class CalDavBackend extends AbstractBackend implements SyncSupport, SubscriptionSupport, SchedulingSupport {
+class CalDavBackend extends AbstractBackend implements SyncSupport, SubscriptionSupport, SchedulingSupport, SharingSupport {
 	use TTransactional;
 
 	public const CALENDAR_TYPE_CALENDAR = 0;
@@ -1040,7 +1041,7 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 			$rs->closeCursor();
 		}
 	}
-	
+
 	/**
 	 * Returns all calendar objects with limited metadata for a calendar
 	 *
@@ -3706,5 +3707,97 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 				));
 			}
 		}, $this->db);
+	}
+
+	public function updateInvites($calendarId, array $sharees) {
+		$existingSharees = $this->getInvites($calendarId);
+		$added = [];
+		$removed = [];
+
+		$findExistingSharee = static function (DAV\Xml\Element\Sharee $sharee) use ($existingSharees): ?DAV\Xml\Element\Sharee {
+			foreach ($existingSharees as $existingSharee) {
+				if ($sharee->href === $existingSharee->href) {
+					return $existingSharee;
+				}
+			}
+
+			return null;
+		};
+
+		foreach ($sharees as $sharee) {
+			$existingSharee = $findExistingSharee($sharee);
+
+			if ($existingSharee && $sharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_NOACCESS) {
+				$removed[] = $sharee->href;
+			} elseif (!$existingSharee  || $sharee->access !== $existingSharee->access) {
+				$added[] = [
+					//href: string, commonName: string, readOnly: bool
+					'href' => $sharee->href,
+					'commonName' => 'none',
+					'readOnly' => $sharee->access === \Sabre\DAV\Sharing\Plugin::ACCESS_READ,
+				];
+			}
+		}
+
+		$calendar = $this->getCalendarById($calendarId);
+		$shareable = new class(
+			$calendarId,
+			$calendar['principaluri'],
+		) implements IShareable {
+			public function __construct(
+				private int $calendarId,
+				private string $owner,
+			) {
+			}
+
+			public function delete() {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function getName() {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function setName($name) {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function getLastModified() {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function updateShares(array $add, array $remove): void {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function getShares(): array {
+				throw new \RuntimeException('Not implemented');
+			}
+
+			public function getResourceId(): int {
+				return $this->calendarId;
+			}
+
+			public function getOwner() {
+				return $this->owner;
+			}
+		};
+
+		// Just create and remove shares. There is no invitation mechanism yet.
+		$this->updateShares($shareable, $added, $removed);
+	}
+
+	public function getInvites($calendarId) {
+		// For now, there are no invites. Just use shares and force-set them to accepted.
+		$shares = $this->calendarSharingBackend->getShares($calendarId);
+
+		$sabreSharees = array_map(function (array $share) {
+			return new DAV\Xml\Element\Sharee([
+				'href' => $share['href'],
+				'access' => DAV\Sharing\Plugin::ACCESS_READ,
+				'inviteStatus' => DAV\Sharing\Plugin::INVITE_ACCEPTED,
+			]);
+		}, $shares);
+		return $sabreSharees;
 	}
 }

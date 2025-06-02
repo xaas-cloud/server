@@ -16,13 +16,17 @@ use OCA\DAV\Exception\UnsupportedLimitOnInitialSyncException;
 use OCP\DB\Exception;
 use OCP\IConfig;
 use OCP\IL10N;
+use OCP\IURLGenerator;
+use OCP\Server;
 use Psr\Log\LoggerInterface;
 use Sabre\CalDAV\Backend\BackendInterface;
+use Sabre\CalDAV\ISharedCalendar;
 use Sabre\DAV\Exception\Forbidden;
 use Sabre\DAV\Exception\NotFound;
 use Sabre\DAV\IMoveTarget;
 use Sabre\DAV\INode;
 use Sabre\DAV\PropPatch;
+use Sabre\DAV\Sharing\Plugin as SabreSharingPlugin;
 
 /**
  * Class Calendar
@@ -30,8 +34,9 @@ use Sabre\DAV\PropPatch;
  * @package OCA\DAV\CalDAV
  * @property CalDavBackend $caldavBackend
  */
-class Calendar extends \Sabre\CalDAV\Calendar implements IRestorable, IShareable, IMoveTarget {
+class Calendar extends \Sabre\CalDAV\Calendar implements IRestorable, IShareable, IMoveTarget, ISharedCalendar {
 	protected IL10N $l10n;
+	protected IURLGenerator $url;
 	private bool $useTrashbin = true;
 
 	public function __construct(
@@ -41,6 +46,8 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IRestorable, IShareable
 		private IConfig $config,
 		private LoggerInterface $logger,
 	) {
+		$this->url = Server::get(IURLGenerator::class);
+
 		// Convert deletion date to ISO8601 string
 		if (isset($calendarInfo[TrashbinPlugin::PROPERTY_DELETED_AT])) {
 			$calendarInfo[TrashbinPlugin::PROPERTY_DELETED_AT] = (new DateTimeImmutable())
@@ -123,6 +130,16 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IRestorable, IShareable
 				'principal' => $this->getOwner() . '/calendar-proxy-read',
 				'protected' => true,
 			],
+		];
+		$acl[] = [
+			'privilege' => '{DAV:}share',
+			'principal' => $this->getOwner(),
+			'protected' => true,
+		];
+		$acl[] = [
+			'privilege' => '{DAV:}share',
+			'principal' => $this->getOwner() . '/calendar-proxy-write',
+			'protected' => true,
 		];
 
 		if ($this->getName() !== BirthdayService::BIRTHDAY_CALENDAR_URI) {
@@ -399,5 +416,36 @@ class Calendar extends \Sabre\CalDAV\Calendar implements IRestorable, IShareable
 			$this->logger->error('Could not move calendar object: ' . $e->getMessage(), ['exception' => $e]);
 			return false;
 		}
+	}
+
+	public function getShareAccess() {
+		if ($this->isShared()) {
+			if ($this->canWrite()) {
+				return SabreSharingPlugin::ACCESS_READWRITE;
+			}
+
+			return SabreSharingPlugin::ACCESS_READ;
+		}
+
+		if (!empty($this->getShares())) {
+			return SabreSharingPlugin::ACCESS_SHAREDOWNER;
+		}
+
+		return SabreSharingPlugin::ACCESS_NOTSHARED;
+	}
+
+	public function getShareResourceUri() {
+		$url = $this->url->getAbsoluteURL($this->url->linkTo('', 'remote.php') . '/dav/');
+		$url .= $this->calendarInfo['href'];
+		return $url;
+	}
+
+	public function updateInvites(array $sharees) {
+		$this->caldavBackend->updateInvites($this->calendarInfo['id'], $sharees);
+		return $this->getInvites();
+	}
+
+	public function getInvites() {
+		return $this->caldavBackend->getInvites($this->calendarInfo['id']);
 	}
 }

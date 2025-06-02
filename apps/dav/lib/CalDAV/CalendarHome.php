@@ -88,6 +88,15 @@ class CalendarHome extends \Sabre\CalDAV\CalendarHome {
 		$objects = [];
 		foreach ($calendars as $calendar) {
 			$objects[] = new Calendar($this->caldavBackend, $calendar, $this->l10n, $this->config, $this->logger);
+
+			/*
+			$owner = $calendar['{http://owncloud.org/ns}owner-principal'];
+			if ($owner === $this->principalInfo['uri']) {
+				$objects[] = new Calendar($this->caldavBackend, $calendar, $this->l10n, $this->config, $this->logger);
+			} else {
+				$objects[] = new SharedCalendar($this->caldavBackend, $calendar, $this->l10n, $this->config, $this->logger);
+			}
+			*/
 		}
 
 		if ($this->caldavBackend instanceof SchedulingSupport) {

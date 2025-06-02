@@ -208,6 +208,11 @@ class Server {
 			$this->server->addPlugin(\OCP\Server::get(CalDavValidatePlugin::class));
 		}
 
+		if ($this->requestIsForSubtree(['calendars'])) {
+			$this->server->addPlugin(new \Sabre\DAV\Sharing\Plugin());
+			$this->server->addPlugin(new \Sabre\CalDAV\SharingPlugin());
+		}
+
 		// addressbook plugins
 		if ($this->requestIsForSubtree(['addressbooks', 'principals'])) {
 			$this->server->addPlugin(new DAV\Sharing\Plugin($authBackend, \OCP\Server::get(IRequest::class), \OCP\Server::get(IConfig::class)));
