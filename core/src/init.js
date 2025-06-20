@@ -19,16 +19,6 @@ import { initFallbackClipboardAPI } from './utils/ClipboardFallback.ts'
 // keep in sync with core/css/variables.scss
 const breakpointMobileWidth = 1024
 
-const initLiveTimestamps = () => {
-	// Update live timestamps every 30 seconds
-	setInterval(() => {
-		$('.live-relative-timestamp').each(function() {
-			const timestamp = parseInt($(this).attr('data-timestamp'), 10)
-			$(this).text(moment(timestamp).fromNow())
-		})
-	}, 30 * 1000)
-}
-
 /**
  * Moment doesn't have aliases for every locale and doesn't parse some locale IDs correctly so we need to alias them
  */
@@ -276,6 +266,4 @@ export const initCore = () => {
 		toggleSnapperOnSize()
 
 	}
-
-	initLiveTimestamps()
 }
