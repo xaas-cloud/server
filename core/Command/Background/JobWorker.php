@@ -119,6 +119,7 @@ class JobWorker extends JobBase {
 				continue;
 			}
 
+			$output->writeln('<comment>Job ' . $job::class . ' is a TimedJob, this command is designed to run QueuedJob.</comment>');
 			$output->writeln('Running job ' . get_class($job) . ' with ID ' . $job->getId());
 
 			if ($output->isVerbose()) {
