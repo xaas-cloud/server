@@ -49,8 +49,8 @@ class JobWorker extends JobBase {
 				'interval',
 				'i',
 				InputOption::VALUE_OPTIONAL,
-				'Interval in seconds in which the worker should repeat already processed jobs (set to 0 for no repeat)',
-				5
+				'Interval in seconds in which the worker should repeat already processed jobs',
+				1
 			)
 			->addOption(
 				'stop_after',
@@ -115,7 +115,7 @@ class JobWorker extends JobBase {
 
 				$output->writeln('Waiting for new jobs to be queued', OutputInterface::VERBOSITY_VERBOSE);
 				// Re-check interval for new jobs
-				sleep(1);
+				sleep($input->getOption('interval'));
 				continue;
 			}
 
