@@ -26,29 +26,29 @@
 			@close="onMenuClose"
 			@closed="onMenuClosed">
 			<!-- Default actions list-->
-			<NcActionButton v-for="action, index in enabledMenuActions"
+			<FileEntryAction v-for="(action, index) in renderedNonDestructiveActions"
 				:key="action.id"
-				:ref="`action-${action.id}`"
-				class="files-list__row-action"
-				:class="{
-					[`files-list__row-action-${action.id}`]: true,
-					'files-list__row-action--inline': index < enabledInlineActions.length,
-					'files-list__row-action--menu': isValidMenu(action)
-				}"
-				:close-after-click="!isValidMenu(action)"
-				:data-cy-files-list-row-action="action.id"
+				:action="action"
+				:grid-mode="gridMode"
+				:is-loading="isLoadingAction(action)"
 				:is-menu="isValidMenu(action)"
-				:aria-label="action.title?.([source], currentView)"
-				:title="action.title?.([source], currentView)"
-				@click="onActionClick(action)">
-				<template #icon>
-					<NcLoadingIcon v-if="isLoadingAction(action)" />
-					<NcIconSvgWrapper v-else
-						class="files-list__row-action-icon"
-						:svg="action.iconSvgInline([source], currentView)" />
-				</template>
-				{{ actionDisplayName(action) }}
-			</NcActionButton>
+				:source="source"
+				:variant="(index < enabledInlineActions.length) ? 'inline' : undefined"
+				@click="onActionClick(action)" />
+
+			<template v-if="renderedDestructiveActions.length">
+				<NcActionSeparator />
+
+				<!-- Destructive actions list-->
+				<FileEntryAction v-for="action in renderedDestructiveActions"
+					:key="action.id"
+					:action="action"
+					:grid-mode="gridMode"
+					:is-loading="isLoadingAction(action)"
+					:source="source"
+					:variant="undefined /* inline already rendered above */"
+					@click="onActionClick(action)" />
+			</template>
 
 			<!-- Submenu actions list-->
 			<template v-if="openedSubmenu && enabledSubmenuActions[openedSubmenu?.id]">
@@ -62,20 +62,14 @@
 				<NcActionSeparator />
 
 				<!-- Submenu actions -->
-				<NcActionButton v-for="action in enabledSubmenuActions[openedSubmenu?.id]"
+				<FileEntryAction v-for="action in enabledSubmenuActions[openedSubmenu?.id]"
 					:key="action.id"
-					:class="`files-list__row-action-${action.id}`"
-					class="files-list__row-action--submenu"
-					close-after-click
-					:data-cy-files-list-row-action="action.id"
-					:title="action.title?.([source], currentView)"
-					@click="onActionClick(action)">
-					<template #icon>
-						<NcLoadingIcon v-if="isLoadingAction(action)" :size="18" />
-						<NcIconSvgWrapper v-else :svg="action.iconSvgInline([source], currentView)" />
-					</template>
-					{{ actionDisplayName(action) }}
-				</NcActionButton>
+					:action="action"
+					:grid-mode="gridMode"
+					:is-loading="isLoadingAction(action)"
+					:source="source"
+					variant="submenu"
+					@click="onActionClick(action)" />
 			</template>
 		</NcActions>
 	</td>
@@ -85,18 +79,17 @@
 import type { PropType } from 'vue'
 import type { FileAction, Node } from '@nextcloud/files'
 
-import { DefaultType, NodeStatus } from '@nextcloud/files'
+import { DefaultType } from '@nextcloud/files'
 import { defineComponent, inject } from 'vue'
 import { t } from '@nextcloud/l10n'
 import { useHotKey } from '@nextcloud/vue/composables/useHotKey'
 
 import ArrowLeftIcon from 'vue-material-design-icons/ArrowLeft.vue'
 import CustomElementRender from '../CustomElementRender.vue'
+import FileEntryAction from './FileEntryAction.vue'
 import NcActionButton from '@nextcloud/vue/components/NcActionButton'
 import NcActions from '@nextcloud/vue/components/NcActions'
 import NcActionSeparator from '@nextcloud/vue/components/NcActionSeparator'
-import NcIconSvgWrapper from '@nextcloud/vue/components/NcIconSvgWrapper'
-import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 
 import { executeAction } from '../../utils/actionUtils.ts'
 import { useActiveStore } from '../../store/active.ts'
@@ -112,11 +105,10 @@ export default defineComponent({
 	components: {
 		ArrowLeftIcon,
 		CustomElementRender,
+		FileEntryAction,
 		NcActionButton,
 		NcActions,
 		NcActionSeparator,
-		NcIconSvgWrapper,
-		NcLoadingIcon,
 	},
 
 	mixins: [actionsMixins],
@@ -151,16 +143,15 @@ export default defineComponent({
 			enabledFileActions,
 			filesListWidth,
 			t,
+			// Allow nested components to be detected as valid NcActionButton
+			// https://github.com/nextcloud-libraries/nextcloud-vue/blob/a498a5df4f8abbcf3e9ef1f581f379098b4ede6d/src/components/NcActions/NcActions.vue#L1260-L1279
+			type: { name: NcActionButton },
 		}
 	},
 
 	computed: {
 		isActive() {
 			return this.activeStore?.activeNode?.source === this.source.source
-		},
-
-		isLoading() {
-			return this.source.status === NodeStatus.LOADING
 		},
 
 		// Enabled action that are displayed inline
@@ -211,6 +202,14 @@ export default defineComponent({
 			return actions.filter(action => !(action.parent && topActionsIds.includes(action.parent)))
 		},
 
+		renderedNonDestructiveActions() {
+			return this.enabledMenuActions.filter(action => !action.destructive)
+		},
+
+		renderedDestructiveActions() {
+			return this.enabledMenuActions.filter(action => action.destructive)
+		},
+
 		openedMenu: {
 			get() {
 				return this.opened
@@ -250,22 +249,6 @@ export default defineComponent({
 	},
 
 	methods: {
-		actionDisplayName(action: FileAction) {
-			try {
-				if ((this.gridMode || (this.filesListWidth < 768 && action.inline)) && typeof action.title === 'function') {
-					// if an inline action is rendered in the menu for
-					// lack of space we use the title first if defined
-					const title = action.title([this.source], this.currentView)
-					if (title) return title
-				}
-				return action.displayName([this.source], this.currentView)
-			} catch (error) {
-				logger.error('Error while getting action display name', { action, error })
-				// Not ideal, but better than nothing
-				return action.id
-			}
-		},
-
 		isLoadingAction(action: FileAction) {
 			if (!this.isActive) {
 				return false
@@ -338,16 +321,5 @@ main.app-content[style*="mouse-pos-x"] .v-popper__popper {
 <style scoped lang="scss">
 .files-list__row-action {
 	--max-icon-size: calc(var(--default-clickable-area) - 2 * var(--default-grid-baseline));
-
-	// inline icons can have clickable area size so they still fit into the row
-	&.files-list__row-action--inline {
-		--max-icon-size: var(--default-clickable-area);
-	}
-
-	// Some icons exceed the default size so we need to enforce a max width and height
-	.files-list__row-action-icon :deep(svg) {
-		max-height: var(--max-icon-size) !important;
-		max-width: var(--max-icon-size) !important;
-	}
 }
 </style>
