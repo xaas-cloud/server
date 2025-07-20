@@ -172,6 +172,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
@@ -856,6 +857,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])
 			->onlyMethods(['canAccessShare'])
@@ -1488,6 +1490,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])
 			->onlyMethods(['formatShare'])
@@ -1876,6 +1879,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
@@ -1975,6 +1979,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
@@ -2402,6 +2407,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
@@ -2474,6 +2480,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
@@ -2713,6 +2720,7 @@ class ShareAPIControllerTest extends TestCase {
 				$this->factory,
 				$this->mailer,
 				$this->tagManager,
+				$this->getEmailValidatorWithStrictEmailCheck(),
 				$this->currentUser,
 			])->onlyMethods(['formatShare'])
 			->getMock();
