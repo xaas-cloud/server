@@ -54,9 +54,6 @@ class MailPluginTest extends TestCase {
 	/** @var IUserSession|\PHPUnit\Framework\MockObject\MockObject */
 	protected $userSession;
 
-	/** @var IMailer|\PHPUnit\Framework\MockObject\MockObject */
-	protected $mailer;
-
 	protected function setUp(): void {
 		parent::setUp();
 
@@ -65,7 +62,6 @@ class MailPluginTest extends TestCase {
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->knownUserService = $this->createMock(KnownUserService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->mailer = $this->createMock(IMailer::class);
 		$this->cloudIdManager = new CloudIdManager(
 			$this->contactsManager,
 			$this->createMock(IURLGenerator::class),
@@ -117,9 +113,6 @@ class MailPluginTest extends TestCase {
 			->willReturn('current');
 		$this->userSession->method('getUser')
 			->willReturn($currentUser);
-
-		$this->mailer->method('validateMailAddress')
-			->willReturn($validEmail);
 
 		$this->contactsManager->expects($this->any())
 			->method('search')
@@ -603,9 +596,6 @@ class MailPluginTest extends TestCase {
 		$currentUser->expects($this->any())
 			->method('getUID')
 			->willReturn('currentUser');
-
-		$this->mailer->method('validateMailAddress')
-			->willReturn($validEmail);
 
 		$this->contactsManager->expects($this->any())
 			->method('search')
