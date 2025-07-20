@@ -371,12 +371,6 @@
     </UndefinedMethod>
   </file>
   <file src="apps/dav/lib/CalDAV/Reminder/NotificationProvider/EmailProvider.php">
-    <DeprecatedMethod>
-      <code><![CDATA[validateMailAddress]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
-    </DeprecatedMethod>
     <LessSpecificReturnStatement>
       <code><![CDATA[$emailAddresses]]></code>
     </LessSpecificReturnStatement>
@@ -458,9 +452,6 @@
     </DeprecatedMethod>
   </file>
   <file src="apps/dav/lib/CalDAV/Schedule/IMipPlugin.php">
-    <DeprecatedMethod>
-      <code><![CDATA[validateMailAddress]]></code>
-    </DeprecatedMethod>
     <RedundantCast>
       <code><![CDATA[(string)$iTipMessage->recipientName]]></code>
     </RedundantCast>
@@ -1593,7 +1584,6 @@
     </DeprecatedClass>
     <DeprecatedMethod>
       <code><![CDATA[getAppValue]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
     </DeprecatedMethod>
     <RedundantCast>
       <code><![CDATA[(int)$code]]></code>
@@ -2084,7 +2074,6 @@
       <code><![CDATA[getAppValue]]></code>
       <code><![CDATA[getAppValue]]></code>
       <code><![CDATA[setAppValue]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
     </DeprecatedMethod>
   </file>
   <file src="apps/settings/lib/Controller/WebAuthnController.php">
@@ -2206,10 +2195,6 @@
     </DeprecatedMethod>
   </file>
   <file src="apps/sharebymail/lib/ShareByMailProvider.php">
-    <DeprecatedMethod>
-      <code><![CDATA[validateMailAddress]]></code>
-      <code><![CDATA[validateMailAddress]]></code>
-    </DeprecatedMethod>
     <InvalidArgument>
       <code><![CDATA[$share->getId()]]></code>
       <code><![CDATA[(int)$data['id']]]></code>
@@ -3074,11 +3059,6 @@
       <code><![CDATA[listen]]></code>
       <code><![CDATA[listen]]></code>
       <code><![CDATA[listen]]></code>
-    </DeprecatedMethod>
-  </file>
-  <file src="core/Command/User/Add.php">
-    <DeprecatedMethod>
-      <code><![CDATA[validateMailAddress]]></code>
     </DeprecatedMethod>
   </file>
   <file src="core/Command/User/AuthTokens/Add.php">
