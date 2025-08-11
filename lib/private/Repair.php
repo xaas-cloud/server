@@ -19,7 +19,6 @@ use OC\Repair\CleanUpAbandonedApps;
 use OC\Repair\ClearFrontendCaches;
 use OC\Repair\ClearGeneratedAvatarCache;
 use OC\Repair\Collation;
-use OC\Repair\DeduplicateMounts;
 use OC\Repair\Events\RepairAdvanceEvent;
 use OC\Repair\Events\RepairErrorEvent;
 use OC\Repair\Events\RepairFinishEvent;
@@ -56,6 +55,7 @@ use OC\Repair\RepairDavShares;
 use OC\Repair\RepairInvalidShares;
 use OC\Repair\RepairLogoDimension;
 use OC\Repair\RepairMimeTypes;
+use OC\Repair\TruncateMounts;
 use OC\Template\JSCombiner;
 use OCA\DAV\Migration\DeleteSchedulingObjects;
 use OCP\AppFramework\QueryException;
@@ -216,7 +216,7 @@ class Repair implements IOutput {
 				\OCP\Server::get(IDBConnection::class)
 			),
 			\OCP\Server::get(DeleteSchedulingObjects::class),
-			\OCP\Server::get(DeduplicateMounts::class),
+			\OCP\Server::get(TruncateMounts::class),
 		];
 	}
 
