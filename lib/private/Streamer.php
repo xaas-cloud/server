@@ -14,6 +14,7 @@ use OCP\Files\InvalidPathException;
 use OCP\Files\IRootFolder;
 use OCP\Files\NotFoundException;
 use OCP\Files\NotPermittedException;
+use OCP\IDateTimeZone;
 use OCP\IRequest;
 use ownCloud\TarStreamer\TarStreamer;
 use Psr\Log\LoggerInterface;
@@ -156,7 +157,7 @@ class Streamer {
 		$options = [];
 		if ($time) {
 			$options = [
-				'timestamp' => $time
+				'timestamp' => $this->fixTimestamp($time),
 			];
 		}
 
@@ -185,5 +186,15 @@ class Streamer {
 	 */
 	public function finalize() {
 		return $this->streamerInstance->finalize();
+	}
+
+	private function fixTimestamp(int $timestamp): int {
+		if ($this->streamerInstance instanceof ZipStreamer) {
+			// Zip does not support any timezone information
+			// while tar is interpreted as Unix time the Zip time is interpreted as local time of the user...
+			$zone = \OCP\Server::get(IDateTimeZone::class)->getTimeZone($timestamp);
+			$timestamp += $zone->getOffset(new \DateTimeImmutable('@' . (string)$timestamp));
+		}
+		return $timestamp;
 	}
 }
