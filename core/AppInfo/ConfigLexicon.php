@@ -8,36 +8,54 @@ declare(strict_types=1);
 
 namespace OC\Core\AppInfo;
 
-use NCU\Config\Lexicon\ConfigLexiconEntry;
-use NCU\Config\Lexicon\ConfigLexiconStrictness;
-use NCU\Config\Lexicon\IConfigLexicon;
-use NCU\Config\ValueType;
+use OCP\Config\Lexicon\Entry;
+use OCP\Config\Lexicon\ILexicon;
+use OCP\Config\Lexicon\Preset;
+use OCP\Config\Lexicon\Strictness;
+use OCP\Config\ValueType;
 
 /**
  * Config Lexicon for core.
  *
  * Please Add & Manage your Config Keys in that file and keep the Lexicon up to date!
  */
-class ConfigLexicon implements IConfigLexicon {
+class ConfigLexicon implements ILexicon {
 	public const SHAREAPI_ALLOW_FEDERATION_ON_PUBLIC_SHARES = 'shareapi_allow_federation_on_public_shares';
+	public const SHARE_CUSTOM_TOKEN = 'shareapi_allow_custom_tokens';
+	public const USER_LANGUAGE = 'lang';
+	public const LASTCRON_TIMESTAMP = 'lastcron';
 
-	public function getStrictness(): ConfigLexiconStrictness {
-		return ConfigLexiconStrictness::IGNORE;
+	public function getStrictness(): Strictness {
+		return Strictness::IGNORE;
 	}
 
 	public function getAppConfigs(): array {
 		return [
-			new ConfigLexiconEntry(
+			new Entry(
 				key: self::SHAREAPI_ALLOW_FEDERATION_ON_PUBLIC_SHARES,
 				type: ValueType::BOOL,
-				lazy: true,
 				defaultRaw: true,
 				definition: 'adds share permission to public shares to allow adding them to your Nextcloud (federation)',
+				lazy: true,
 			),
+			new Entry(
+				key: self::SHARE_CUSTOM_TOKEN,
+				type: ValueType::BOOL,
+				defaultRaw: fn (Preset $p): bool => match ($p) {
+					Preset::FAMILY, Preset::PRIVATE => true,
+					default => false,
+				},
+				definition: 'Allow users to set custom share link tokens',
+				lazy: true,
+				note: 'Shares with guessable tokens may be accessed easily. Shares with custom tokens will continue to be accessible after this setting has been disabled.',
+			),
+			new Entry(self::LASTCRON_TIMESTAMP, ValueType::INT, 0, 'timestamp of last cron execution'),
 		];
 	}
 
 	public function getUserConfigs(): array {
-		return [];
+		return [
+			new Entry(self::USER_LANGUAGE, ValueType::STRING, null, 'language'),
+		];
 	}
 }

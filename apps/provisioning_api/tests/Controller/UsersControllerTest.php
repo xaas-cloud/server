@@ -452,7 +452,8 @@ class UsersControllerTest extends TestCase {
 		$this->userManager
 			->expects($this->once())
 			->method('createUser')
-			->with('NewUser', 'PasswordOfTheNewUser');
+			->with('NewUser', 'PasswordOfTheNewUser')
+			->willReturn($this->createMock(IUser::class));
 		$this->logger
 			->expects($this->once())
 			->method('info')
@@ -517,7 +518,8 @@ class UsersControllerTest extends TestCase {
 		$this->userManager
 			->expects($this->once())
 			->method('createUser')
-			->with('NewUser', 'PasswordOfTheNewUser');
+			->with('NewUser', 'PasswordOfTheNewUser')
+			->willReturn($this->createMock(IUser::class));
 		$this->logger
 			->expects($this->once())
 			->method('info')
@@ -567,7 +569,8 @@ class UsersControllerTest extends TestCase {
 		$this->userManager
 			->expects($this->once())
 			->method('createUser')
-			->with($this->anything(), 'PasswordOfTheNewUser');
+			->with($this->anything(), 'PasswordOfTheNewUser')
+			->willReturn($this->createMock(IUser::class));
 		$this->logger
 			->expects($this->once())
 			->method('info')
@@ -1140,6 +1143,7 @@ class UsersControllerTest extends TestCase {
 			IAccountManager::PROPERTY_ADDRESS => ['value' => 'address'],
 			IAccountManager::PROPERTY_PHONE => ['value' => 'phone'],
 			IAccountManager::PROPERTY_TWITTER => ['value' => 'twitter'],
+			IAccountManager::PROPERTY_BLUESKY => ['value' => 'bluesky'],
 			IAccountManager::PROPERTY_FEDIVERSE => ['value' => 'fediverse'],
 			IAccountManager::PROPERTY_WEBSITE => ['value' => 'website'],
 			IAccountManager::PROPERTY_ORGANISATION => ['value' => 'organisation'],
@@ -1216,6 +1220,7 @@ class UsersControllerTest extends TestCase {
 			'address' => 'address',
 			'website' => 'website',
 			'twitter' => 'twitter',
+			'bluesky' => 'bluesky',
 			'fediverse' => 'fediverse',
 			'groups' => ['group0', 'group1', 'group2'],
 			'language' => 'de',
@@ -1329,6 +1334,7 @@ class UsersControllerTest extends TestCase {
 			IAccountManager::PROPERTY_ADDRESS => ['value' => 'address'],
 			IAccountManager::PROPERTY_PHONE => ['value' => 'phone'],
 			IAccountManager::PROPERTY_TWITTER => ['value' => 'twitter'],
+			IAccountManager::PROPERTY_BLUESKY => ['value' => 'bluesky'],
 			IAccountManager::PROPERTY_FEDIVERSE => ['value' => 'fediverse'],
 			IAccountManager::PROPERTY_WEBSITE => ['value' => 'website'],
 			IAccountManager::PROPERTY_ORGANISATION => ['value' => 'organisation'],
@@ -1361,6 +1367,7 @@ class UsersControllerTest extends TestCase {
 			'address' => 'address',
 			'website' => 'website',
 			'twitter' => 'twitter',
+			'bluesky' => 'bluesky',
 			'fediverse' => 'fediverse',
 			'groups' => [],
 			'language' => 'da',
@@ -1513,6 +1520,7 @@ class UsersControllerTest extends TestCase {
 			IAccountManager::PROPERTY_ADDRESS => ['value' => 'address'],
 			IAccountManager::PROPERTY_PHONE => ['value' => 'phone'],
 			IAccountManager::PROPERTY_TWITTER => ['value' => 'twitter'],
+			IAccountManager::PROPERTY_BLUESKY => ['value' => 'bluesky'],
 			IAccountManager::PROPERTY_FEDIVERSE => ['value' => 'fediverse'],
 			IAccountManager::PROPERTY_WEBSITE => ['value' => 'website'],
 			IAccountManager::PROPERTY_ORGANISATION => ['value' => 'organisation'],
@@ -1544,6 +1552,7 @@ class UsersControllerTest extends TestCase {
 			'address' => 'address',
 			'website' => 'website',
 			'twitter' => 'twitter',
+			'bluesky' => 'bluesky',
 			'fediverse' => 'fediverse',
 			'groups' => [],
 			'language' => 'ru',
@@ -1891,6 +1900,7 @@ class UsersControllerTest extends TestCase {
 	public static function selfEditChangePropertyProvider(): array {
 		return [
 			[IAccountManager::PROPERTY_TWITTER, '@oldtwitter', '@newtwitter'],
+			[IAccountManager::PROPERTY_BLUESKY, 'old.bluesky', 'new.bluesky'],
 			[IAccountManager::PROPERTY_FEDIVERSE, '@oldFediverse@floss.social', '@newFediverse@floss.social'],
 			[IAccountManager::PROPERTY_PHONE, '1234', '12345'],
 			[IAccountManager::PROPERTY_ADDRESS, 'Something street 2', 'Another street 3'],
@@ -1967,6 +1977,7 @@ class UsersControllerTest extends TestCase {
 			[IAccountManager::PROPERTY_DISPLAYNAME, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
 			[IAccountManager::PROPERTY_EMAIL, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
 			[IAccountManager::PROPERTY_TWITTER, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
+			[IAccountManager::PROPERTY_BLUESKY, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
 			[IAccountManager::PROPERTY_FEDIVERSE, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
 			[IAccountManager::PROPERTY_PHONE, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
 			[IAccountManager::PROPERTY_ADDRESS, IAccountManager::SCOPE_LOCAL, IAccountManager::SCOPE_FEDERATED],
@@ -3853,6 +3864,7 @@ class UsersControllerTest extends TestCase {
 					'address' => 'address',
 					'website' => 'website',
 					'twitter' => 'twitter',
+					'bluesky' => 'bluesky',
 					'fediverse' => 'fediverse',
 					'organisation' => 'organisation',
 					'role' => 'role',
@@ -3874,6 +3886,7 @@ class UsersControllerTest extends TestCase {
 			'address' => 'address',
 			'website' => 'website',
 			'twitter' => 'twitter',
+			'bluesky' => 'bluesky',
 			'fediverse' => 'fediverse',
 			'organisation' => 'organisation',
 			'role' => 'role',
@@ -3941,6 +3954,7 @@ class UsersControllerTest extends TestCase {
 			'address' => 'address',
 			'website' => 'website',
 			'twitter' => 'twitter',
+			'bluesky' => 'bluesky',
 			'fediverse' => 'fediverse',
 			'displayname' => 'Demo User',
 			'display-name' => 'Demo User',
@@ -4283,6 +4297,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4298,6 +4313,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4314,6 +4330,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4328,6 +4345,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4343,6 +4361,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4357,6 +4376,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4372,6 +4392,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,
@@ -4386,6 +4407,7 @@ class UsersControllerTest extends TestCase {
 				IAccountManager::PROPERTY_ADDRESS,
 				IAccountManager::PROPERTY_WEBSITE,
 				IAccountManager::PROPERTY_TWITTER,
+				IAccountManager::PROPERTY_BLUESKY,
 				IAccountManager::PROPERTY_FEDIVERSE,
 				IAccountManager::PROPERTY_ORGANISATION,
 				IAccountManager::PROPERTY_ROLE,

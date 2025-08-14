@@ -129,7 +129,7 @@
 						v-bind="result" />
 				</ul>
 				<div class="result-footer">
-					<NcButton type="tertiary-no-background" @click="loadMoreResultsForProvider(providerResult)">
+					<NcButton v-if="providerResult.results.length === providerResult.limit" type="tertiary-no-background" @click="loadMoreResultsForProvider(providerResult)">
 						{{ t('core', 'Load more results') }}
 						<template #icon>
 							<IconDotsHorizontal :size="20" />
@@ -159,8 +159,8 @@ import debounce from 'debounce'
 import { unifiedSearchLogger } from '../../logger'
 
 import IconArrowRight from 'vue-material-design-icons/ArrowRight.vue'
-import IconAccountGroup from 'vue-material-design-icons/AccountGroup.vue'
-import IconCalendarRange from 'vue-material-design-icons/CalendarRange.vue'
+import IconAccountGroup from 'vue-material-design-icons/AccountGroupOutline.vue'
+import IconCalendarRange from 'vue-material-design-icons/CalendarRangeOutline.vue'
 import IconDotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import IconFilter from 'vue-material-design-icons/Filter.vue'
 import IconListBox from 'vue-material-design-icons/ListBox.vue'
@@ -367,7 +367,7 @@ export default defineComponent({
 				this.$refs.searchInput?.focus()
 			})
 		},
-		find(query: string) {
+		find(query: string, providersToSearchOverride = null) {
 			if (query.length === 0) {
 				this.results = []
 				this.searching = false
@@ -382,7 +382,7 @@ export default defineComponent({
 
 			this.searching = true
 			const newResults = []
-			const providersToSearch = this.filteredProviders.length > 0 ? this.filteredProviders : this.providers
+			const providersToSearch = providersToSearchOverride || (this.filteredProviders.length > 0 ? this.filteredProviders : this.providers)
 			const searchProvider = (provider) => {
 				const params = {
 					type: provider.searchFrom ?? provider.id,
@@ -424,6 +424,7 @@ export default defineComponent({
 					newResults.push({
 						...provider,
 						results: response.data.ocs.data.entries,
+						limit: params.limit ?? 5,
 					})
 
 					unifiedSearchLogger.debug('Unified search results:', { results: this.results, newResults })
@@ -513,15 +514,7 @@ export default defineComponent({
 		},
 		async loadMoreResultsForProvider(provider) {
 			this.providerResultLimit += 5
-			// Remove all other providers from filteredProviders except the current "loadmore" provider
-			this.filteredProviders = this.filteredProviders.filter(filteredProvider => filteredProvider.id === provider.id)
-			// Plugin filters may have extra parameters, so we need to keep them
-			// See method handlePluginFilter for more details
-			if (this.filteredProviders.length > 0 && this.filteredProviders[0].isPluginFilter) {
-				provider = this.filteredProviders[0]
-			}
-			this.addProviderFilter(provider, true)
-			this.find(this.searchQuery)
+			this.find(this.searchQuery, [provider])
 		},
 		addProviderFilter(providerFilter, loadMoreResultsForProvider = false) {
 			unifiedSearchLogger.debug('Applying provider filter', { providerFilter, loadMoreResultsForProvider })

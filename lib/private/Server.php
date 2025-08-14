@@ -8,7 +8,6 @@
 namespace OC;
 
 use bantu\IniGetWrapper\IniGetWrapper;
-use NCU\Config\IUserConfig;
 use NCU\Security\Signature\ISignatureManager;
 use OC\Accounts\AccountManager;
 use OC\App\AppManager;
@@ -140,6 +139,7 @@ use OCP\BackgroundJob\IJobList;
 use OCP\Collaboration\Reference\IReferenceManager;
 use OCP\Command\IBus;
 use OCP\Comments\ICommentsManager;
+use OCP\Config\IUserConfig;
 use OCP\Contacts\ContactsMenu\IActionFactory;
 use OCP\Contacts\ContactsMenu\IContactsStore;
 use OCP\Defaults;
@@ -164,7 +164,6 @@ use OCP\Files\Storage\IStorageFactory;
 use OCP\Files\Template\ITemplateManager;
 use OCP\FilesMetadata\IFilesMetadataManager;
 use OCP\FullTextSearch\IFullTextSearchManager;
-use OCP\GlobalScale\IConfig;
 use OCP\Group\ISubAdmin;
 use OCP\Http\Client\IClientService;
 use OCP\IAppConfig;
@@ -660,7 +659,8 @@ class Server extends ServerContainer implements IServerContainer {
 				$c->get(\OCP\IConfig::class),
 				$c->get(IValidator::class),
 				$c->get(IRichTextFormatter::class),
-				$l10n
+				$l10n,
+				$c->get(ITimeFactory::class),
 			);
 		});
 
@@ -1167,11 +1167,11 @@ class Server extends ServerContainer implements IServerContainer {
 
 		$this->registerService(ICloudIdManager::class, function (ContainerInterface $c) {
 			return new CloudIdManager(
+				$c->get(ICacheFactory::class),
+				$c->get(IEventDispatcher::class),
 				$c->get(\OCP\Contacts\IManager::class),
 				$c->get(IURLGenerator::class),
 				$c->get(IUserManager::class),
-				$c->get(ICacheFactory::class),
-				$c->get(IEventDispatcher::class),
 			);
 		});
 

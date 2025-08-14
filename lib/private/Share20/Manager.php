@@ -7,11 +7,13 @@
  */
 namespace OC\Share20;
 
+use OC\Core\AppInfo\ConfigLexicon;
 use OC\Files\Mount\MoveableMount;
 use OC\KnownUser\KnownUserService;
 use OC\Share20\Exception\ProviderException;
 use OCA\Files_Sharing\AppInfo\Application;
 use OCA\Files_Sharing\SharedStorage;
+use OCA\ShareByMail\ShareByMailProvider;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -579,13 +581,10 @@ class Manager implements IManager {
 	 * @param IShare $share
 	 */
 	protected function setLinkParent(IShare $share) {
-		// No sense in checking if the method is not there.
-		if (method_exists($share, 'setParent')) {
-			$storage = $share->getNode()->getStorage();
-			if ($storage->instanceOfStorage(SharedStorage::class)) {
-				/** @var \OCA\Files_Sharing\SharedStorage $storage */
-				$share->setParent($storage->getShareId());
-			}
+		$storage = $share->getNode()->getStorage();
+		if ($storage->instanceOfStorage(SharedStorage::class)) {
+			/** @var \OCA\Files_Sharing\SharedStorage $storage */
+			$share->setParent((int)$storage->getShareId());
 		}
 	}
 
@@ -704,12 +703,12 @@ class Manager implements IManager {
 			}
 
 			// Generate the target
-			$defaultShareFolder = $this->config->getSystemValue('share_folder', '/');
-			$allowCustomShareFolder = $this->config->getSystemValueBool('sharing.allow_custom_share_folder', true);
-			if ($allowCustomShareFolder) {
-				$shareFolder = $this->config->getUserValue($share->getSharedWith(), Application::APP_ID, 'share_folder', $defaultShareFolder);
-			} else {
-				$shareFolder = $defaultShareFolder;
+			$shareFolder = $this->config->getSystemValue('share_folder', '/');
+			if ($share->getShareType() === IShare::TYPE_USER) {
+				$allowCustomShareFolder = $this->config->getSystemValueBool('sharing.allow_custom_share_folder', true);
+				if ($allowCustomShareFolder) {
+					$shareFolder = $this->config->getUserValue($share->getSharedWith(), Application::APP_ID, 'share_folder', $shareFolder);
+				}
 			}
 
 			$target = $shareFolder . '/' . $share->getNode()->getName();
@@ -869,6 +868,7 @@ class Manager implements IManager {
 		// Now update the share!
 		$provider = $this->factory->getProviderForType($share->getShareType());
 		if ($share->getShareType() === IShare::TYPE_EMAIL) {
+			/** @var ShareByMailProvider $provider */
 			$share = $provider->update($share, $plainTextPassword);
 		} else {
 			$share = $provider->update($share);
@@ -1006,7 +1006,6 @@ class Manager implements IManager {
 
 	/**
 	 * Delete all the children of this share
-	 * FIXME: remove once https://github.com/owncloud/core/pull/21660 is in
 	 *
 	 * @param IShare $share
 	 * @return IShare[] List of deleted shares
@@ -1937,7 +1936,7 @@ class Manager implements IManager {
 	}
 
 	public function allowCustomTokens(): bool {
-		return $this->appConfig->getValueBool('core', 'shareapi_allow_custom_tokens', false);
+		return $this->appConfig->getValueBool('core', ConfigLexicon::SHARE_CUSTOM_TOKEN);
 	}
 
 	public function allowViewWithoutDownload(): bool {

@@ -205,6 +205,11 @@ class UsersControllerTest extends \Test\TestCase {
 				'Default twitter',
 				IAccountManager::SCOPE_LOCAL,
 			),
+			IAccountManager::PROPERTY_BLUESKY => $this->buildPropertyMock(
+				IAccountManager::PROPERTY_BLUESKY,
+				'Default bluesky',
+				IAccountManager::SCOPE_LOCAL,
+			),
 			IAccountManager::PROPERTY_FEDIVERSE => $this->buildPropertyMock(
 				IAccountManager::PROPERTY_FEDIVERSE,
 				'Default fediverse',
@@ -430,6 +435,8 @@ class UsersControllerTest extends \Test\TestCase {
 		$addressScope = IAccountManager::SCOPE_PUBLISHED;
 		$twitter = '@nextclouders';
 		$twitterScope = IAccountManager::SCOPE_PUBLISHED;
+		$bluesky = 'nextclouders.net';
+		$blueskyScope = IAccountManager::SCOPE_PUBLISHED;
 		$fediverse = '@nextclouders@floss.social';
 		$fediverseScope = IAccountManager::SCOPE_PUBLISHED;
 		$birthdate = '2020-01-01';
@@ -453,6 +460,8 @@ class UsersControllerTest extends \Test\TestCase {
 		$expectedProperties[IAccountManager::PROPERTY_ADDRESS]['scope'] = $addressScope;
 		$expectedProperties[IAccountManager::PROPERTY_TWITTER]['value'] = $twitter;
 		$expectedProperties[IAccountManager::PROPERTY_TWITTER]['scope'] = $twitterScope;
+		$expectedProperties[IAccountManager::PROPERTY_BLUESKY]['value'] = $bluesky;
+		$expectedProperties[IAccountManager::PROPERTY_BLUESKY]['scope'] = $blueskyScope;
 		$expectedProperties[IAccountManager::PROPERTY_FEDIVERSE]['value'] = $fediverse;
 		$expectedProperties[IAccountManager::PROPERTY_FEDIVERSE]['scope'] = $fediverseScope;
 		$expectedProperties[IAccountManager::PROPERTY_BIRTHDATE]['value'] = $birthdate;
@@ -478,6 +487,8 @@ class UsersControllerTest extends \Test\TestCase {
 			$addressScope,
 			$twitter,
 			$twitterScope,
+			$bluesky,
+			$blueskyScope,
 			$fediverse,
 			$fediverseScope,
 			$birthdate,
@@ -516,6 +527,8 @@ class UsersControllerTest extends \Test\TestCase {
 		$addressScope = ($property === 'addressScope') ? $propertyValue : null;
 		$twitter = ($property === 'twitter') ? $propertyValue : null;
 		$twitterScope = ($property === 'twitterScope') ? $propertyValue : null;
+		$bluesky = ($property === 'bluesky') ? $propertyValue : null;
+		$blueskyScope = ($property === 'blueskyScope') ? $propertyValue : null;
 		$fediverse = ($property === 'fediverse') ? $propertyValue : null;
 		$fediverseScope = ($property === 'fediverseScope') ? $propertyValue : null;
 		$birthdate = ($property === 'birthdate') ? $propertyValue : null;
@@ -554,6 +567,10 @@ class UsersControllerTest extends \Test\TestCase {
 			case 'twitterScope':
 				$propertyId = IAccountManager::PROPERTY_TWITTER;
 				break;
+			case 'bluesky':
+			case 'blueskyScope':
+				$propertyId = IAccountManager::PROPERTY_BLUESKY;
+				break;
 			case 'fediverse':
 			case 'fediverseScope':
 				$propertyId = IAccountManager::PROPERTY_FEDIVERSE;
@@ -591,6 +608,8 @@ class UsersControllerTest extends \Test\TestCase {
 			$addressScope,
 			$twitter,
 			$twitterScope,
+			$bluesky,
+			$blueskyScope,
 			$fediverse,
 			$fediverseScope,
 			$birthdate,
@@ -615,6 +634,8 @@ class UsersControllerTest extends \Test\TestCase {
 			['addressScope', IAccountManager::SCOPE_PUBLISHED],
 			['twitter', '@nextclouders'],
 			['twitterScope', IAccountManager::SCOPE_PUBLISHED],
+			['bluesky', 'nextclouders.net'],
+			['blueskyScope', IAccountManager::SCOPE_PUBLISHED],
 			['fediverse', '@nextclouders@floss.social'],
 			['fediverseScope', IAccountManager::SCOPE_PUBLISHED],
 			['birthdate', '2020-01-01'],

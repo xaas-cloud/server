@@ -713,8 +713,12 @@
                         "$ref": "#/components/schemas/CoreTaskProcessingIO"
                     },
                     "output": {
-                        "$ref": "#/components/schemas/CoreTaskProcessingIO",
-                        "nullable": true
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/CoreTaskProcessingIO"
+                            }
+                        ]
                     },
                     "customId": {
                         "type": "string",
@@ -2562,6 +2566,9 @@
                             1
                         ]
                     },
+                    "is_trusted_server": {
+                        "type": "boolean"
+                    },
                     "is-mount-root": {
                         "type": "boolean"
                     },
@@ -2911,40 +2918,76 @@
                                         "type": "string"
                                     },
                                     "name": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "email": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "address": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "website": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "twitter": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "phone": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "twitter_signature": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "website_signature": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     },
                                     "userid": {
-                                        "$ref": "#/components/schemas/FilesSharingLookup",
-                                        "nullable": true
+                                        "nullable": true,
+                                        "allOf": [
+                                            {
+                                                "$ref": "#/components/schemas/FilesSharingLookup"
+                                            }
+                                        ]
                                     }
                                 }
                             },
@@ -3514,6 +3557,7 @@
                     "role",
                     "subadmin",
                     "twitter",
+                    "bluesky",
                     "website"
                 ],
                 "properties": {
@@ -3673,6 +3717,12 @@
                         "type": "string"
                     },
                     "twitterScope": {
+                        "$ref": "#/components/schemas/ProvisioningApiUserDetailsScope"
+                    },
+                    "bluesky": {
+                        "type": "string"
+                    },
+                    "blueskyScope": {
                         "$ref": "#/components/schemas/ProvisioningApiUserDetailsScope"
                     },
                     "website": {
@@ -4142,7 +4192,8 @@
                         "required": [
                             "enabled",
                             "restore",
-                            "supports_emoji"
+                            "supports_emoji",
+                            "supports_busy"
                         ],
                         "properties": {
                             "enabled": {
@@ -4152,6 +4203,9 @@
                                 "type": "boolean"
                             },
                             "supports_emoji": {
+                                "type": "boolean"
+                            },
+                            "supports_busy": {
                                 "type": "boolean"
                             }
                         }
@@ -4211,8 +4265,12 @@
                         "type": "string"
                     },
                     "clearAt": {
-                        "$ref": "#/components/schemas/UserStatusClearAt",
-                        "nullable": true
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UserStatusClearAt"
+                            }
+                        ]
                     }
                 }
             },
@@ -6872,8 +6930,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }
@@ -6981,8 +7043,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }
@@ -7063,8 +7129,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }
@@ -7162,8 +7232,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }
@@ -7254,8 +7328,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }
@@ -7359,8 +7437,12 @@
                                                         "references": {
                                                             "type": "object",
                                                             "additionalProperties": {
-                                                                "$ref": "#/components/schemas/CoreReference",
-                                                                "nullable": true
+                                                                "nullable": true,
+                                                                "allOf": [
+                                                                    {
+                                                                        "$ref": "#/components/schemas/CoreReference"
+                                                                    }
+                                                                ]
                                                             }
                                                         }
                                                     }

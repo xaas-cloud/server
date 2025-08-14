@@ -121,13 +121,16 @@ This file is generated from multiple sources. Included packages:
 	- version: 7.4.47
 	- license: Apache-2.0
 - @nextcloud/auth
-	- version: 2.5.1
+	- version: 2.5.2
 	- license: GPL-3.0-or-later
 - @nextcloud/axios
 	- version: 2.5.1
 	- license: GPL-3.0-or-later
 - @nextcloud/browser-storage
 	- version: 0.4.0
+	- license: GPL-3.0-or-later
+- @nextcloud/initial-state
+	- version: 2.2.0
 	- license: GPL-3.0-or-later
 - @nextcloud/capabilities
 	- version: 1.2.0
@@ -142,10 +145,10 @@ This file is generated from multiple sources. Included packages:
 	- version: 3.3.2
 	- license: GPL-3.0-or-later
 - @nextcloud/files
-	- version: 3.11.0
+	- version: 3.12.0
 	- license: AGPL-3.0-or-later
 - @nextcloud/initial-state
-	- version: 2.2.0
+	- version: 3.0.0
 	- license: GPL-3.0-or-later
 - @nextcloud/l10n
 	- version: 3.4.0
@@ -165,8 +168,11 @@ This file is generated from multiple sources. Included packages:
 - @nextcloud/router
 	- version: 3.0.1
 	- license: GPL-3.0-or-later
+- @nextcloud/initial-state
+	- version: 2.2.0
+	- license: GPL-3.0-or-later
 - @nextcloud/sharing
-	- version: 0.2.4
+	- version: 0.2.5
 	- license: GPL-3.0-or-later
 - @nextcloud/upload
 	- version: 1.10.0
@@ -174,6 +180,9 @@ This file is generated from multiple sources. Included packages:
 - @nextcloud/vue-select
 	- version: 3.25.1
 	- license: MIT
+- @nextcloud/initial-state
+	- version: 2.2.0
+	- license: GPL-3.0-or-later
 - @nextcloud/vue
 	- version: 8.28.0
 	- license: AGPL-3.0-or-later
@@ -199,7 +208,7 @@ This file is generated from multiple sources. Included packages:
 	- version: 4.5.0
 	- license: Apache-2.0
 - axios
-	- version: 1.9.0
+	- version: 1.11.0
 	- license: MIT
 - balanced-match
 	- version: 1.0.2
@@ -397,7 +406,7 @@ This file is generated from multiple sources. Included packages:
 	- version: 4.17.21
 	- license: MIT
 - marked
-	- version: 15.0.12
+	- version: 16.1.1
 	- license: MIT
 - math-intrinsics
 	- version: 1.1.0
@@ -538,7 +547,7 @@ This file is generated from multiple sources. Included packages:
 	- version: 6.13.0
 	- license: BSD-3-Clause
 - query-string
-	- version: 9.2.0
+	- version: 9.2.2
 	- license: MIT
 - querystringify
 	- version: 2.2.0

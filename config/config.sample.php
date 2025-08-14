@@ -355,6 +355,11 @@ $CONFIG = [
 'carddav_sync_request_timeout' => 30,
 
 /**
+ * The limit applied to the synchronization report request, e.g. federated system address books (as run by `occ federation:sync-addressbooks`).
+ */
+'carddav_sync_request_truncation' => 2500,
+
+/**
  * `true` enables a relaxed session timeout, where the session timeout would no longer be
  * handled by Nextcloud but by either the PHP garbage collection or the expiration of
  * potential other session backends like Redis.
@@ -2249,9 +2254,9 @@ $CONFIG = [
  * Changing this may cause older, unsupported clients to malfunction, potentially
  * leading to data loss or unexpected behavior.
  *
- * Defaults to ``2.7.0``
+ * Defaults to ``3.1.0``
  */
-'minimum.supported.desktop.version' => '2.7.0',
+'minimum.supported.desktop.version' => '3.1.0',
 
 /**
  * Specify the maximum Nextcloud desktop client version allowed to sync with this
