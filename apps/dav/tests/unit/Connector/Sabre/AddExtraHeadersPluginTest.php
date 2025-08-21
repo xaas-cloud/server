@@ -105,14 +105,14 @@ class AddExtraHeadersPluginTest extends TestCase {
 				if (($expectOwnerIdHeader && $expectedInvocations === 1)
 					|| ($expectedInvocations
 						=== 2 && $invocationNumber === 1)) {
-					$this->assertEquals('OC-OwnerId', $name);
+					$this->assertEquals('X-NC-OwnerId', $name);
 					$this->assertEquals($ownerId, $value);
 				}
 
 				if (($expectPermissionsHeader && $expectedInvocations === 1)
 					|| ($expectedInvocations
 						=== 2 && $invocationNumber === 2)) {
-					$this->assertEquals('OC-Permissions', $name);
+					$this->assertEquals('X-NC-Permissions', $name);
 					$this->assertEquals($permissions, $value);
 				}
 			});
