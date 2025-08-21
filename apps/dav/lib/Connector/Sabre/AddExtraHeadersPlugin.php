@@ -20,10 +20,9 @@ use Sabre\HTTP\ResponseInterface;
 class AddExtraHeadersPlugin extends \Sabre\DAV\ServerPlugin {
 	private ?Server $server = null;
 
-	private LoggerInterface $logger;
-
-	public function __construct(LoggerInterface $logger) {
-		$this->logger = $logger;
+	public function __construct(
+		private LoggerInterface $logger,
+	) {
 	}
 
 	public function initialize(Server $server): void {
@@ -53,12 +52,12 @@ class AddExtraHeadersPlugin extends \Sabre\DAV\ServerPlugin {
 
 		$ownerId = $node->getOwner()?->getUID();
 		if ($ownerId !== null) {
-			$response->setHeader('OC-OwnerId', $ownerId);
+			$response->setHeader('X-NC-OwnerId', $ownerId);
 		}
 
 		$permissions = $node->getDavPermissions();
 		if ($permissions !== null) {
-			$response->setHeader('OC-Permissions', $permissions);
+			$response->setHeader('X-NC-Permissions', $permissions);
 		}
 	}
 }
