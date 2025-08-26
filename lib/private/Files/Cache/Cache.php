@@ -623,17 +623,17 @@ class Cache implements ICache {
 
 		$cacheEntryRemovedEvents = [];
 		foreach (array_combine($deletedIds, $deletedPaths) as $fileId => $filePath) {
-			$cacheEntryRemovedEvent = new CacheEntryRemovedEvent(
+			$cacheEntryRemovedEvents[] = new CacheEntryRemovedEvent(
 				$this->storage,
 				$filePath,
 				$fileId,
 				$this->getNumericStorageId()
 			);
-			$cacheEntryRemovedEvents[] = $cacheEntryRemovedEvent;
-			$this->eventDispatcher->dispatchTyped($cacheEntryRemovedEvent);
 		}
 		$this->eventDispatcher->dispatchTyped(new CacheEntriesRemovedEvent($cacheEntryRemovedEvents));
-
+		foreach ($cacheEntryRemovedEvents as $cacheEntryRemovedEvent) {
+			$this->eventDispatcher->dispatchTyped($cacheEntryRemovedEvent);
+		}
 	}
 
 	/**
