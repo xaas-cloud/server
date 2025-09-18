@@ -168,9 +168,9 @@ class FileAccess implements IFileAccess {
 				$parentRows = $result->fetchAll();
 				$result->closeCursor();
 
-				$parentEncryptedByFileId = array_column($parentRows, 'encrypted', 'fileid');
+				$encryptedByFileId = array_column($parentRows, 'encrypted', 'fileid');
 				foreach ($rows as $row) {
-					if ($parentEncryptedByFileId[$row['fileid']] === 1) {
+					if ($encryptedByFileId[$row['parent']]) {
 						continue;
 					}
 					yield Cache::cacheEntryFromData($row, $this->mimeTypeLoader);
