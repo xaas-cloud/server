@@ -1204,7 +1204,6 @@
   </file>
   <file src="apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php">
     <DeprecatedClass>
-      <code><![CDATA[\OC_Util::setupFS($shareWith)]]></code>
       <code><![CDATA[\OC_Util::setupFS($user)]]></code>
     </DeprecatedClass>
     <DeprecatedMethod>
@@ -1519,23 +1518,8 @@
     </DeprecatedMethod>
   </file>
   <file src="apps/files_sharing/lib/External/Manager.php">
-    <DeprecatedClass>
-      <code><![CDATA[Files::buildNotExistingFileName($shareFolder, $share['name'])]]></code>
-      <code><![CDATA[Files::buildNotExistingFileName('/', $name)]]></code>
-      <code><![CDATA[Share::RESPONSE_FORMAT]]></code>
-      <code><![CDATA[\OC_Util::setupFS($user)]]></code>
-    </DeprecatedClass>
     <DeprecatedMethod>
-      <code><![CDATA[Files::buildNotExistingFileName($shareFolder, $share['name'])]]></code>
-      <code><![CDATA[Files::buildNotExistingFileName('/', $name)]]></code>
-      <code><![CDATA[execute]]></code>
-      <code><![CDATA[execute]]></code>
-      <code><![CDATA[execute]]></code>
-      <code><![CDATA[execute]]></code>
-      <code><![CDATA[execute]]></code>
       <code><![CDATA[insertIfNotExist]]></code>
-      <code><![CDATA[sendNotification]]></code>
-      <code><![CDATA[sendNotification]]></code>
     </DeprecatedMethod>
     <LessSpecificReturnStatement>
       <code><![CDATA[$mount]]></code>
