@@ -4091,10 +4091,6 @@
     </InvalidArgument>
   </file>
   <file src="lib/private/legacy/OC_Helper.php">
-    <InvalidArrayOffset>
-      <code><![CDATA[$matches[0][$last_match]]]></code>
-      <code><![CDATA[$matches[1][$last_match]]]></code>
-    </InvalidArrayOffset>
     <UndefinedInterfaceMethod>
       <code><![CDATA[getQuota]]></code>
     </UndefinedInterfaceMethod>
