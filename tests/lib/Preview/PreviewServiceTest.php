@@ -13,7 +13,6 @@ namespace Test\Preview;
 use OC\Preview\Db\Preview;
 use OC\Preview\Db\PreviewMapper;
 use OC\Preview\PreviewService;
-use OCP\IPreview;
 use OCP\Server;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;

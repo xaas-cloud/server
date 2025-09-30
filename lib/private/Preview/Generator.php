@@ -111,9 +111,9 @@ class Generator {
 
 		[$file->getId() => $previews] = $this->previewMapper->getAvailablePreviews([$file->getId()]);
 
-		$previewVersion = -1;
+		$previewVersion = null;
 		if ($file instanceof IVersionedPreviewFile) {
-			$previewVersion = (int)$file->getPreviewVersion();
+			$previewVersion = $file->getPreviewVersion();
 		}
 
 		// Get the max preview and infer the max preview sizes from that
@@ -298,7 +298,7 @@ class Generator {
 	 * @param Preview[] $previews
 	 * @throws NotFoundException
 	 */
-	private function getMaxPreview(array $previews, File $file, string $mimeType, int $version): Preview {
+	private function getMaxPreview(array $previews, File $file, string $mimeType, ?string $version): Preview {
 		// We don't know the max preview size, so we can't use getCachedPreview.
 		// It might have been generated with a higher resolution than the current value.
 		foreach ($previews as $preview) {
@@ -313,7 +313,7 @@ class Generator {
 		return $this->generateProviderPreview($file, $maxWidth, $maxHeight, false, true, $mimeType, $version);
 	}
 
-	private function generateProviderPreview(File $file, int $width, int $height, bool $crop, bool $max, string $mimeType, int $version): Preview {
+	private function generateProviderPreview(File $file, int $width, int $height, bool $crop, bool $max, string $mimeType, ?string $version): Preview {
 		$previewProviders = $this->previewManager->getProviders();
 		foreach ($previewProviders as $supportedMimeType => $providers) {
 			// Filter out providers that does not support this mime
@@ -468,7 +468,7 @@ class Generator {
 		bool $crop,
 		int $maxWidth,
 		int $maxHeight,
-		?int $version,
+		?string $version,
 		bool $cacheResult,
 	): ISimpleFile {
 		$preview = $maxPreview;
@@ -540,7 +540,10 @@ class Generator {
 			if ($preview instanceof IStreamImage) {
 				$size = $this->storageFactory->writePreview($previewEntry, $preview->resource());
 			} else {
-				$size = $this->storageFactory->writePreview($previewEntry, $preview->data());
+				$stream = fopen('php://temp', 'w+');
+				fwrite($stream, $preview->data());
+				rewind($stream);
+				$size = $this->storageFactory->writePreview($previewEntry, $stream);
 			}
 			if (!$size) {
 				throw new \RuntimeException('Unable to write preview file');

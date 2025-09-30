@@ -14,7 +14,6 @@ use OC\Preview\Db\Preview;
 use OC\Preview\Db\PreviewMapper;
 use OCP\Files\IMimeTypeLoader;
 use OCP\IDBConnection;
-use OCP\IPreview;
 use OCP\Server;
 use Test\TestCase;
 

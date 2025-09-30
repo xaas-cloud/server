@@ -9,13 +9,12 @@ declare(strict_types=1);
 
 namespace OC\Preview\Db;
 
-use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\AppFramework\Db\Entity;
 use OCP\AppFramework\Db\QBMapper;
 use OCP\DB\Exception;
 use OCP\DB\QueryBuilder\IQueryBuilder;
-use OCP\Files\IMimeTypeLoader;
 use OCP\IDBConnection;
-use OCP\IPreview;
+use Override;
 
 /**
  * @template-extends QBMapper<Preview>
@@ -24,6 +23,7 @@ class PreviewMapper extends QBMapper {
 
 	private const TABLE_NAME = 'previews';
 	private const LOCATION_TABLE_NAME = 'preview_locations';
+	private const VERSION_TABLE_NAME = 'preview_versions';
 
 	public function __construct(
 		IDBConnection $db,
@@ -31,11 +31,43 @@ class PreviewMapper extends QBMapper {
 		parent::__construct($db, self::TABLE_NAME, Preview::class);
 	}
 
+	#[Override]
+	public function insert(Entity $entity): Entity {
+		/** @var Preview $preview */
+		$preview = $entity;
+		if ($preview->getVersion() !== null && $preview->getVersion() !== '') {
+			$qb = $this->db->getQueryBuilder();
+			$qb->insert(self::VERSION_TABLE_NAME)
+				->values([
+					'version' => $preview->getVersion(),
+					'file_id' => $preview->getFileId(),
+				])
+				->executeStatement();
+			$entity->setVersionId($qb->getLastInsertId());
+		}
+		return parent::insert($preview);
+	}
+
+	#[Override]
+	public function delete(Entity $entity): Entity {
+		/** @var Preview $preview */
+		$preview = $entity;
+		if ($preview->getVersion() !== null && $preview->getVersion() !== '') {
+			$qb = $this->db->getQueryBuilder();
+			$qb->delete(self::VERSION_TABLE_NAME)
+				->where($qb->expr()->eq('file_id', $qb->createNamedParameter($preview->getFileId())))
+				->andWhere($qb->expr()->eq('version', $qb->createNamedParameter($preview->getVersion())))
+				->executeStatement();
+		}
+
+		return parent::delete($entity);
+	}
+
 	/**
 	 * @return \Generator<Preview>
 	 * @throws Exception
 	 */
-	public function getAvailablePreviewForFile(int $fileId): \Generator {
+	public function getAvailablePreviewsForFile(int $fileId): \Generator {
 		$selectQb = $this->db->getQueryBuilder();
 		$this->joinLocation($selectQb)
 			->where($selectQb->expr()->eq('p.file_id', $selectQb->createNamedParameter($fileId, IQueryBuilder::PARAM_INT)));
@@ -82,10 +114,13 @@ class PreviewMapper extends QBMapper {
 	}
 
 	protected function joinLocation(IQueryBuilder $qb): IQueryBuilder {
-		return $qb->select('p.*', 'l.bucket_name', 'l.object_store_name')
+		return $qb->select('p.*', 'l.bucket_name', 'l.object_store_name', 'v.version')
 			->from(self::TABLE_NAME, 'p')
-			->leftJoin('p', 'preview_locations', 'l', $qb->expr()->eq(
+			->leftJoin('p', self::LOCATION_TABLE_NAME, 'l', $qb->expr()->eq(
 				'p.location_id', 'l.id'
+			))
+			->leftJoin('p', self::VERSION_TABLE_NAME, 'v', $qb->expr()->eq(
+				'p.version_id', 'v.id'
 			));
 	}
 

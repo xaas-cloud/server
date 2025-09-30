@@ -14,7 +14,6 @@ use OCP\AppFramework\Db\Entity;
 use OCP\DB\Types;
 use OCP\Files\IMimeTypeDetector;
 use OCP\Files\IMimeTypeLoader;
-use OCP\Server;
 
 /**
  * Preview entity mapped to the oc_previews and oc_preview_locations table.
@@ -47,8 +46,8 @@ use OCP\Server;
  * @method void setMax(bool $max)
  * @method string getEtag() Get the etag of the preview.
  * @method void setEtag(string $etag)
- * @method int|null getVersion() Get the version for files_versions_s3
- * @method void setVersion(?int $version)
+ * @method string|null getVersion() Get the version for files_versions_s3
+ * @method void setVersionId(int $versionId)
  * @method bool|null getIs() Get the version for files_versions_s3
  * @method bool isEncrypted() Get whether the preview is encrypted. At the moment every preview is unencrypted.
  * @method void setEncrypted(bool $encrypted)
@@ -65,14 +64,14 @@ class Preview extends Entity {
 	protected ?int $width = null;
 	protected ?int $height = null;
 	protected ?int $mimetype = null;
-
 	protected ?int $sourceMimetype = null;
 	protected ?int $mtime = null;
 	protected ?int $size = null;
 	protected ?bool $max = null;
 	protected ?bool $cropped = null;
 	protected ?string $etag = null;
-	protected ?int $version = null;
+	protected ?string $version = null;
+	protected ?int $versionId = null;
 	protected ?bool $encrypted = null;
 
 	public function __construct() {
@@ -90,7 +89,7 @@ class Preview extends Entity {
 		$this->addType('cropped', Types::BOOLEAN);
 		$this->addType('encrypted', Types::BOOLEAN);
 		$this->addType('etag', Types::STRING);
-		$this->addType('version', Types::BIGINT);
+		$this->addType('versionId', Types::STRING);
 	}
 
 	public static function fromPath(string $path, IMimeTypeDetector $mimeTypeDetector, IMimeTypeLoader $mimeTypeLoader): Preview|false {
@@ -98,7 +97,7 @@ class Preview extends Entity {
 		$preview->setFileId((int)basename(dirname($path)));
 
 		$fileName = pathinfo($path, PATHINFO_FILENAME) . '.' . pathinfo($path, PATHINFO_EXTENSION);
-		$ok = preg_match('/(([0-9]+)-)?([0-9]+)-([0-9]+)(-(max))?(-(crop))?\.([a-z]{3,4})/', $fileName, $matches);
+		$ok = preg_match('/(([A-Za-z0-9\+\/]+)-)?([0-9]+)-([0-9]+)(-(max))?(-(crop))?\.([a-z]{3,4})/', $fileName, $matches);
 
 		if ($ok !== 1) {
 			return false;
@@ -108,8 +107,8 @@ class Preview extends Entity {
 			2 => $version,
 			3 => $width,
 			4 => $height,
-			6 => $crop,
-			8 => $max,
+			6 => $max,
+			8 => $crop,
 		] = $matches;
 
 		$preview->setMimetype($mimeTypeLoader->getId($mimeTypeDetector->detectPath($fileName)));
@@ -120,7 +119,7 @@ class Preview extends Entity {
 		$preview->setMax($max === 'max');
 
 		if (!empty($version)) {
-			$preview->setVersion((int)$version);
+			$preview->setVersion($version);
 		}
 		return $preview;
 	}
@@ -159,5 +158,9 @@ class Preview extends Entity {
 
 	public function setObjectStoreName(string $objectStoreName): void {
 		$this->objectStoreName = $objectStoreName;
+	}
+
+	public function setVersion(?string $version): void {
+		$this->version = $version;
 	}
 }

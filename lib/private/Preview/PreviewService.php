@@ -70,8 +70,8 @@ class PreviewService {
 	/**
 	 * @return \Generator<Preview>
 	 */
-	public function getAvailablePreviewForFile(int $fileId): \Generator {
-		return $this->previewMapper->getAvailablePreviewForFile($fileId);
+	public function getAvailablePreviewsForFile(int $fileId): \Generator {
+		return $this->previewMapper->getAvailablePreviewsForFile($fileId);
 	}
 
 	/**

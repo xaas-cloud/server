@@ -49,6 +49,7 @@ class Watcher {
 		[$node->getId() => $previews] = $this->previewMapper->getAvailablePreviews([$nodeId]);
 		foreach ($previews as $preview) {
 			$this->storageFactory->deletePreview($preview);
+			$this->previewMapper->delete($preview);
 		}
 	}
 

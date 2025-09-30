@@ -108,7 +108,7 @@ class MovePreviewJobTest extends TestCase {
 		$folder->newFile('128-128-crop.png', 'abcdefg');
 		$this->assertEquals(1, count($this->previewAppData->getDirectoryListing()));
 		$this->assertEquals(2, count($folder->getDirectoryListing()));
-		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5))));
+		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5))));
 
 		$job = new MovePreviewJob(
 			Server::get(ITimeFactory::class),
@@ -124,7 +124,7 @@ class MovePreviewJobTest extends TestCase {
 		);
 		$this->invokePrivate($job, 'run', [[]]);
 		$this->assertEquals(0, count($this->previewAppData->getDirectoryListing()));
-		$this->assertEquals(2, count(iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5))));
+		$this->assertEquals(2, count(iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5))));
 	}
 
 	private static function getInternalFolder(string $name): string {
@@ -139,7 +139,7 @@ class MovePreviewJobTest extends TestCase {
 
 		$folder = $this->previewAppData->getFolder(self::getInternalFolder((string)5));
 		$this->assertEquals(2, count($folder->getDirectoryListing()));
-		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5))));
+		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5))));
 
 		$job = new MovePreviewJob(
 			Server::get(ITimeFactory::class),
@@ -155,7 +155,7 @@ class MovePreviewJobTest extends TestCase {
 		);
 		$this->invokePrivate($job, 'run', [[]]);
 		$this->assertEquals(0, count($this->previewAppData->getDirectoryListing()));
-		$this->assertEquals(2, count(iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5))));
+		$this->assertEquals(2, count(iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5))));
 	}
 
 	#[TestDox("Test the migration from the 'new' nested hierarchy to the database format")]
@@ -178,7 +178,7 @@ class MovePreviewJobTest extends TestCase {
 
 		$folder = $this->previewAppData->getFolder(self::getInternalFolder((string)5));
 		$this->assertEquals(9, count($folder->getDirectoryListing()));
-		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5))));
+		$this->assertEquals(0, count(iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5))));
 
 		$job = new MovePreviewJob(
 			Server::get(ITimeFactory::class),
@@ -194,24 +194,24 @@ class MovePreviewJobTest extends TestCase {
 		);
 		$this->invokePrivate($job, 'run', [[]]);
 		$this->assertEquals(0, count($this->previewAppData->getDirectoryListing()));
-		$previews = iterator_to_array($this->previewMapper->getAvailablePreviewForFile(5));
+		$previews = iterator_to_array($this->previewMapper->getAvailablePreviewsForFile(5));
 		$this->assertEquals(9, count($previews));
 
 		$nameVersionMapping = [];
 		foreach ($previews as $preview) {
-			$nameVersionMapping[$preview->getName()] = $preview->getVersion();
+			$nameVersionMapping[$preview->getName($this->mimeTypeLoader)] = $preview->getVersion();
 		}
 
 		$this->assertEquals([
-			'1000-128-128.png' => 1000,
-			'1000-128-128-crop.png' => 1000,
-			'1000-256-256-max.png' => 1000,
-			'1001-128-128.png' => 1001,
-			'1001-128-128-crop.png' => 1001,
-			'1001-256-256-max.png' => 1001,
-			'128-128.png' => -1,
-			'128-128-crop.png' => -1,
-			'256-256-max.png' => -1,
+			'1000-128-128-crop.jpg' => 1000,
+			'1000-128-128.jpg' => 1000,
+			'1000-256-256-max.jpg' => 1000,
+			'1001-128-128-crop.jpg' => 1001,
+			'1001-128-128.jpg' => 1001,
+			'1001-256-256-max.jpg' => 1001,
+			'128-128-crop.jpg' => null,
+			'128-128.jpg' => null,
+			'256-256-max.jpg' => null,
 		], $nameVersionMapping);
 	}
 }
