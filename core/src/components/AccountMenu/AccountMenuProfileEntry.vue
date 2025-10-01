@@ -14,6 +14,13 @@
 		<template v-if="profileEnabled" #subname>
 			{{ name }}
 		</template>
+		<template v-if="canCreateToken" #extra-actions>
+			<NcButton variant="secondary" @click="handleQrCodeClick">
+				<template #icon>
+					<IconQrcodeScan :size="20" />
+				</template>
+			</NcButton>
+		</template>
 		<template v-if="loading" #indicator>
 			<NcLoadingIcon />
 		</template>
@@ -26,6 +33,8 @@ import { getCurrentUser } from '@nextcloud/auth'
 import { subscribe, unsubscribe } from '@nextcloud/event-bus'
 import { defineComponent } from 'vue'
 
+import IconQrcodeScan from 'vue-material-design-icons/QrcodeScan.vue'
+import NcButton from '@nextcloud/vue/components/NcButton'
 import NcListItem from '@nextcloud/vue/components/NcListItem'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
 
@@ -35,6 +44,8 @@ export default defineComponent({
 	name: 'AccountMenuProfileEntry',
 
 	components: {
+		IconQrcodeScan,
+		NcButton,
 		NcListItem,
 		NcLoadingIcon,
 	},
@@ -68,6 +79,7 @@ export default defineComponent({
 	data() {
 		return {
 			loading: false,
+			canCreateToken: true, //loadState('settings', 'can_create_app_token'),
 		}
 	},
 
@@ -86,6 +98,10 @@ export default defineComponent({
 			if (this.profileEnabled) {
 				this.loading = true
 			}
+		},
+
+		handleQrCodeClick() {
+			console.log("ASD")
 		},
 
 		handleProfileEnabledUpdate(profileEnabled: boolean) {
