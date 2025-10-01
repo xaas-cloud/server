@@ -31,7 +31,7 @@
 <script lang="ts">
 import { translate as t } from '@nextcloud/l10n'
 import { defineComponent } from 'vue'
-import { useAuthTokenStore } from '../store/authtoken'
+import {TokenType, useAuthTokenStore} from '../store/authtoken'
 
 import AuthToken from './AuthToken.vue'
 
@@ -46,7 +46,7 @@ export default defineComponent({
 	},
 	computed: {
 		sortedTokens() {
-			return [...this.authTokenStore.tokens].sort((t1, t2) => t2.lastActivity - t1.lastActivity)
+			return [...this.authTokenStore.tokens].filter(t => t.type !== TokenType.ONETIME_TOKEN).sort((t1, t2) => t2.lastActivity - t1.lastActivity)
 		},
 	},
 	methods: {
