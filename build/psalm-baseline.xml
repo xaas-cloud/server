@@ -1520,6 +1520,8 @@
   <file src="apps/files_sharing/lib/External/Manager.php">
     <DeprecatedMethod>
       <code><![CDATA[insertIfNotExist]]></code>
+      <code><![CDATA[sendNotification]]></code>
+      <code><![CDATA[sendNotification]]></code>
     </DeprecatedMethod>
     <LessSpecificReturnStatement>
       <code><![CDATA[$mount]]></code>
