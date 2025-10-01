@@ -108,7 +108,7 @@ export default defineComponent({
 		},
 		qrUrl() {
 			const server = window.location.protocol + '//' + window.location.host + getRootUrl()
-			return `nc://login/user:${this.loginName}&password:${this.appPassword}&server:${server}`
+			return `nc://onetime-login/user:${this.loginName}&password:${this.appPassword}&server:${server}`
 		},
 		copyPasswordLabel() {
 			if (this.isPasswordCopied) {
