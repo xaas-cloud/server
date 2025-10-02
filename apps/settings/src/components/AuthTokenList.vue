@@ -31,7 +31,7 @@
 <script lang="ts">
 import { translate as t } from '@nextcloud/l10n'
 import { defineComponent } from 'vue'
-import {TokenType, useAuthTokenStore} from '../store/authtoken'
+import { TokenType, useAuthTokenStore } from '../store/authtoken'
 
 import AuthToken from './AuthToken.vue'
 

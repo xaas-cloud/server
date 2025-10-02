@@ -37,6 +37,14 @@ import IconQrcodeScan from 'vue-material-design-icons/QrcodeScan.vue'
 import NcButton from '@nextcloud/vue/components/NcButton'
 import NcListItem from '@nextcloud/vue/components/NcListItem'
 import NcLoadingIcon from '@nextcloud/vue/components/NcLoadingIcon'
+import { spawnDialog } from '@nextcloud/vue/functions/dialog'
+import AccountQrLoginDialog from './AccountQRLoginDialog.vue'
+import { confirmPassword } from '@nextcloud/password-confirmation'
+import axios from '@nextcloud/axios'
+import type {
+	ITokenResponse,
+} from '../../../../apps/settings/src/store/authtoken.ts'
+import { generateUrl } from '@nextcloud/router'
 
 const { profileEnabled } = loadState('user_status', 'profileEnabled', { profileEnabled: false })
 
@@ -79,7 +87,7 @@ export default defineComponent({
 	data() {
 		return {
 			loading: false,
-			canCreateToken: true, //loadState('settings', 'can_create_app_token'),
+			canCreateToken: true, // loadState('settings', 'can_create_app_token'),
 		}
 	},
 
@@ -100,8 +108,16 @@ export default defineComponent({
 			}
 		},
 
-		handleQrCodeClick() {
-			console.log("ASD")
+		async handleQrCodeClick() {
+			console.log('QR code clicked')
+			await confirmPassword()
+
+			const { data } = await axios.post<ITokenResponse>(generateUrl('/settings/personal/authtokens'), { name: '', oneTime: true })
+
+			const result = await spawnDialog(AccountQrLoginDialog, { data }, (result) => {
+				console.log('Dialog closed', result)
+			})
+
 		},
 
 		handleProfileEnabledUpdate(profileEnabled: boolean) {
