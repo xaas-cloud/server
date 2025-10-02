@@ -77,6 +77,7 @@ SPDX-FileCopyrightText: Dr.-Ing. Mario Heiderich, Cure53 <mario@cure53.de> (http
 SPDX-FileCopyrightText: David Clark
 SPDX-FileCopyrightText: Christopher Jeffrey
 SPDX-FileCopyrightText: Christoph Wurst
+SPDX-FileCopyrightText: Chen Fengyuan
 SPDX-FileCopyrightText: Borys Serebrov
 SPDX-FileCopyrightText: Ben Drucker
 SPDX-FileCopyrightText: Austin Andrews
@@ -93,6 +94,9 @@ SPDX-FileCopyrightText: @nextcloud/dialogs developers
 This file is generated from multiple sources. Included packages:
 - @babel/runtime
 	- version: 7.28.3
+	- license: MIT
+- @chenfengyuan/vue-qrcode
+	- version: 1.0.2
 	- license: MIT
 - @floating-ui/core
 	- version: 1.7.3
